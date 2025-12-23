@@ -5,6 +5,7 @@ import { Document, DocumentStatus, ExtractedData } from "../types";
 interface DocumentStore {
   documents: Document[];
   addDocument: (file: File) => string;
+  updateDocument: (id: string, updates: Partial<Document>) => void;
   updateDocumentStatus: (
     id: string,
     status: DocumentStatus,
@@ -15,6 +16,7 @@ interface DocumentStore {
     data: ExtractedData,
     qualityScore: number
   ) => void;
+  setUnsavedChanges: (id: string, hasChanges: boolean) => void;
   deleteDocument: (id: string) => void;
 }
 
@@ -50,6 +52,14 @@ export const useDocumentStore = create<DocumentStore>()(
         }));
       },
 
+      updateDocument: (id: string, updates: Partial<Document>) => {
+        set((state) => ({
+          documents: state.documents.map((doc) =>
+            doc.id === id ? { ...doc, ...updates } : doc
+          ),
+        }));
+      },
+
       setDocumentData: (
         id: string,
         data: ExtractedData,
@@ -63,9 +73,17 @@ export const useDocumentStore = create<DocumentStore>()(
                   extractedData: data,
                   qualityScore,
                   processedAt: new Date(),
-                  status: "done" as DocumentStatus,
+                  status: "awaiting_review" as DocumentStatus,
                 }
               : doc
+          ),
+        }));
+      },
+
+      setUnsavedChanges: (id: string, hasChanges: boolean) => {
+        set((state) => ({
+          documents: state.documents.map((doc) =>
+            doc.id === id ? { ...doc, hasUnsavedChanges: hasChanges } : doc
           ),
         }));
       },

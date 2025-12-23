@@ -42,15 +42,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { QualityBadge } from "./quality-badge";
+import FieldEditor from "./field-editor";
 import type { Document, DocumentStatus } from "@/lib/types";
 
 const statusConfig: Record<
   DocumentStatus,
-  { icon: any; label: string; variant: any }
+  { icon: any; label: string; variant?: any; className?: string }
 > = {
   queued: { icon: Clock, label: "Queued", variant: "secondary" },
   processing: { icon: Loader2, label: "Processing", variant: "default" },
   done: { icon: CheckCircle, label: "Done", variant: "default" },
+  awaiting_review: { icon: Eye, label: "Awaiting Review", variant: "outline" },
+  reviewed: {
+    icon: CheckCircle,
+    label: "Reviewed",
+    variant: "default",
+    className: "bg-green-600 text-white border-transparent",
+  },
   failed: { icon: AlertCircle, label: "Failed", variant: "destructive" },
 };
 
@@ -58,7 +66,9 @@ const statusOrder: Record<DocumentStatus, number> = {
   queued: 0,
   processing: 1,
   done: 2,
-  failed: 3,
+  awaiting_review: 3,
+  reviewed: 4,
+  failed: 5,
 };
 
 export function DocumentsTable() {
@@ -68,6 +78,8 @@ export function DocumentsTable() {
   const updateDocumentStatus = useDocumentStore(
     (state) => state.updateDocumentStatus
   );
+  const updateDocument = useDocumentStore((state) => state.updateDocument);
+  const setUnsavedChanges = useDocumentStore((state) => state.setUnsavedChanges);
 
   const [sorting, setSorting] = useState<SortingState>([
     { id: "uploadedAt", desc: true },
@@ -144,7 +156,7 @@ export function DocumentsTable() {
           return (
             <Badge
               variant={config.variant}
-              className="flex items-center gap-1 w-fit"
+              className={`flex items-center gap-1 w-fit ${config.className ?? ""}`}
             >
               <StatusIcon
                 className={`w-3 h-3 ${isProcessing ? "animate-spin" : ""}`}
@@ -243,7 +255,7 @@ export function DocumentsTable() {
 
           return (
             <div className="flex items-center justify-end gap-2">
-              {doc.status === "done" && (
+              {(doc.status === "done" || doc.status === "awaiting_review" || doc.status === "reviewed") && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -251,11 +263,15 @@ export function DocumentsTable() {
                   onClick={() => {
                     setSelectedDocumentId(doc.id);
                     setEditedData(doc.extractedData ?? null);
+                    // reset unsaved changes flag when opening
+                    setUnsavedChanges(doc.id, false);
+                    updateDocument(doc.id, { hasUnsavedChanges: false });
                   }}
                 >
                   <Eye className="w-4 h-4" />
                 </Button>
               )}
+              {/* Mark-as-reviewed removed — reviews are marked when saving */}
               <Button
                 variant="ghost"
                 size="sm"
@@ -269,7 +285,7 @@ export function DocumentsTable() {
         },
       },
     ],
-    [deleteDocument]
+    [deleteDocument, updateDocument, setUnsavedChanges]
   );
 
   const selectedDocument =
@@ -277,6 +293,11 @@ export function DocumentsTable() {
 
   const handleFieldChange = (field: string, value: any) => {
     setEditedData((prev: any) => ({ ...(prev || {}), [field]: value }));
+    if (selectedDocumentId) {
+      setUnsavedChanges(selectedDocumentId, true);
+      // Also mark the document as having unsaved changes in the store
+      updateDocument(selectedDocumentId, { hasUnsavedChanges: true });
+    }
   };
 
   const saveReview = () => {
@@ -286,13 +307,23 @@ export function DocumentsTable() {
       editedData,
       selectedDocument.qualityScore ?? 0
     );
-    // keep document in 'done' state to mark reviewed
-    updateDocumentStatus(selectedDocument.id, "done");
+    // mark review as completed immediately on save
+    updateDocumentStatus(selectedDocument.id, "reviewed");
+    setUnsavedChanges(selectedDocument.id, false);
+    updateDocument(selectedDocument.id, {
+      hasUnsavedChanges: false,
+      isReviewed: true,
+    });
     setSelectedDocumentId(null);
     setEditedData(null);
   };
 
   const closeReview = () => {
+    if (selectedDocumentId) {
+      // discard edits: clear unsaved changes flag
+      setUnsavedChanges(selectedDocumentId, false);
+      updateDocument(selectedDocumentId, { hasUnsavedChanges: false });
+    }
     setSelectedDocumentId(null);
     setEditedData(null);
   };
@@ -372,6 +403,8 @@ export function DocumentsTable() {
               <SelectItem value="queued">Queued</SelectItem>
               <SelectItem value="processing">Processing</SelectItem>
               <SelectItem value="done">Done</SelectItem>
+              <SelectItem value="awaiting_review">Awaiting Review</SelectItem>
+              <SelectItem value="reviewed">Reviewed</SelectItem>
               <SelectItem value="failed">Failed</SelectItem>
             </SelectContent>
           </Select>
@@ -473,65 +506,19 @@ export function DocumentsTable() {
           <div className="space-y-3">
             <h4 className="text-sm font-medium">Extracted Data</h4>
             {!editedData && (
-              <p className="text-sm text-gray-500">
-                No extracted data available.
-              </p>
+              <p className="text-sm text-gray-500">No extracted data available.</p>
             )}
             {editedData && (
-              <div className="space-y-2">
-                {Object.keys(editedData).map((key) => {
-                  const val = editedData[key];
-                  if (typeof val === "boolean") {
-                    return (
-                      <label
-                        key={key}
-                        className="flex items-center justify-between"
-                      >
-                        <span className="text-sm capitalize">
-                          {key.replace(/_/g, " ")}
-                        </span>
-                        <input
-                          type="checkbox"
-                          checked={!!val}
-                          onChange={(e) =>
-                            handleFieldChange(key, e.target.checked)
-                          }
-                        />
-                      </label>
-                    );
+              <FieldEditor
+                data={editedData}
+                onChange={(d) => {
+                  setEditedData(d);
+                  if (selectedDocumentId) {
+                    setUnsavedChanges(selectedDocumentId, true);
+                    updateDocument(selectedDocumentId, { hasUnsavedChanges: true });
                   }
-
-                  if (typeof val === "number") {
-                    return (
-                      <label key={key} className="flex flex-col">
-                        <span className="text-sm">
-                          {key.replace(/_/g, " ")}
-                        </span>
-                        <input
-                          className="border rounded px-2 py-1"
-                          type="number"
-                          value={val}
-                          onChange={(e) =>
-                            handleFieldChange(key, Number(e.target.value))
-                          }
-                        />
-                      </label>
-                    );
-                  }
-
-                  return (
-                    <label key={key} className="flex flex-col">
-                      <span className="text-sm">{key.replace(/_/g, " ")}</span>
-                      <input
-                        className="border rounded px-2 py-1"
-                        type="text"
-                        value={val ?? ""}
-                        onChange={(e) => handleFieldChange(key, e.target.value)}
-                      />
-                    </label>
-                  );
-                })}
-              </div>
+                }}
+              />
             )}
 
             <div className="flex items-center justify-end gap-2 pt-3">

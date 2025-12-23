@@ -1,4 +1,17 @@
-export type DocumentStatus = 'queued' | 'processing' | 'done' | 'failed';
+export type DocumentStatus =
+  | 'queued'
+  | 'processing'
+  | 'done'
+  | 'awaiting_review'
+  | 'reviewed'
+  | 'failed';
+
+export enum RentIncreaseType {
+  Fixed = 'fixed',
+  Indexed = 'indexed',
+  Stepped = 'stepped',
+  None = 'none',
+}
 
 export interface ExtractedData {
   name: string;
@@ -9,7 +22,7 @@ export interface ExtractedData {
   address_city: string;
   warm_rent: number;
   cold_rent: number;
-  rent_increase_type: string;
+  rent_increase_type: RentIncreaseType | string;
   date: string;
   is_active: boolean;
   
@@ -30,5 +43,7 @@ export interface Document {
   extractedData?: ExtractedData;
   qualityScore?: number; 
   processedAt?: Date;
+  isReviewed?: boolean;
+  hasUnsavedChanges?: boolean;
 }
 
