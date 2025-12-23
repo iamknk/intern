@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo } from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -10,12 +10,22 @@ import {
   getFilteredRowModel,
   getSortedRowModel,
   useReactTable,
-} from '@tanstack/react-table';
-import { FileText, CheckCircle, Clock, AlertCircle, XCircle, Loader2, Eye, ArrowUpDown, Filter } from 'lucide-react';
-import { useDocumentStore } from '@/lib/store/document-store';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
+} from "@tanstack/react-table";
+import {
+  FileText,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  XCircle,
+  Loader2,
+  Eye,
+  ArrowUpDown,
+  Filter,
+} from "lucide-react";
+import { useDocumentStore } from "@/lib/store/document-store";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -23,22 +33,25 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { QualityBadge } from './quality-badge';
-import type { Document, DocumentStatus } from '@/lib/types';
+} from "@/components/ui/select";
+import { QualityBadge } from "./quality-badge";
+import type { Document, DocumentStatus } from "@/lib/types";
 
-const statusConfig: Record<DocumentStatus, { icon: any; label: string; variant: any }> = {
-  queued: { icon: Clock, label: 'Queued', variant: 'secondary' },
-  processing: { icon: Loader2, label: 'Processing', variant: 'default' },
-  done: { icon: CheckCircle, label: 'Done', variant: 'default' },
-  failed: { icon: AlertCircle, label: 'Failed', variant: 'destructive' },
+const statusConfig: Record<
+  DocumentStatus,
+  { icon: any; label: string; variant: any }
+> = {
+  queued: { icon: Clock, label: "Queued", variant: "secondary" },
+  processing: { icon: Loader2, label: "Processing", variant: "default" },
+  done: { icon: CheckCircle, label: "Done", variant: "default" },
+  failed: { icon: AlertCircle, label: "Failed", variant: "destructive" },
 };
 
 const statusOrder: Record<DocumentStatus, number> = {
@@ -51,198 +64,258 @@ const statusOrder: Record<DocumentStatus, number> = {
 export function DocumentsTable() {
   const documents = useDocumentStore((state) => state.documents);
   const deleteDocument = useDocumentStore((state) => state.deleteDocument);
-  
+  const setDocumentData = useDocumentStore((state) => state.setDocumentData);
+  const updateDocumentStatus = useDocumentStore(
+    (state) => state.updateDocumentStatus
+  );
+
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'uploadedAt', desc: true }
+    { id: "uploadedAt", desc: true },
   ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [qualityFilter, setQualityFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [qualityFilter, setQualityFilter] = useState<string>("all");
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
+    null
+  );
+  const [editedData, setEditedData] = useState<any>(null);
 
-  
-  const columns: ColumnDef<Document>[] = useMemo(() => [
-    {
-      accessorKey: 'filename',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="hover:bg-transparent p-0"
-          >
-            Filename
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        const doc = row.original;
-        const config = statusConfig[doc.status];
-        const isProcessing = doc.status === 'processing';
-        
-        return (
-          <div className="flex items-center gap-3">
-            <FileText className="w-5 h-5 text-gray-400 flex-shrink-0" />
-            <div className="space-y-1 min-w-0">
-              <p className="font-medium text-sm truncate">{doc.filename}</p>
-              {doc.error && (
-                <p className="text-xs text-red-600 dark:text-red-400">
-                  {doc.error}
-                </p>
-              )}
-              {isProcessing && (
-                <Progress value={66} className="h-1 w-full" />
-              )}
+  const columns: ColumnDef<Document>[] = useMemo(
+    () => [
+      {
+        accessorKey: "filename",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="hover:bg-transparent p-0"
+            >
+              Filename
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          );
+        },
+        cell: ({ row }) => {
+          const doc = row.original;
+          const config = statusConfig[doc.status];
+          const isProcessing = doc.status === "processing";
+
+          return (
+            <div className="flex items-center gap-3">
+              <FileText className="w-5 h-5 text-gray-400 flex-shrink-0" />
+              <div className="space-y-1 min-w-0">
+                <p className="font-medium text-sm truncate">{doc.filename}</p>
+                {doc.error && (
+                  <p className="text-xs text-red-600 dark:text-red-400">
+                    {doc.error}
+                  </p>
+                )}
+                {isProcessing && <Progress value={66} className="h-1 w-full" />}
+              </div>
             </div>
-          </div>
-        );
+          );
+        },
       },
-    },
-    {
-      accessorKey: 'status',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="hover:bg-transparent p-0"
-          >
-            Status
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
+      {
+        accessorKey: "status",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="hover:bg-transparent p-0"
+            >
+              Status
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          );
+        },
+        cell: ({ row }) => {
+          const status = row.getValue("status") as DocumentStatus;
+          const config = statusConfig[status];
+          const StatusIcon = config.icon;
+          const isProcessing = status === "processing";
+
+          return (
+            <Badge
+              variant={config.variant}
+              className="flex items-center gap-1 w-fit"
+            >
+              <StatusIcon
+                className={`w-3 h-3 ${isProcessing ? "animate-spin" : ""}`}
+              />
+              {config.label}
+            </Badge>
+          );
+        },
+        sortingFn: (rowA, rowB) => {
+          const statusA = rowA.getValue("status") as DocumentStatus;
+          const statusB = rowB.getValue("status") as DocumentStatus;
+          return statusOrder[statusA] - statusOrder[statusB];
+        },
+        filterFn: (row, id, value) => {
+          if (value === "all") return true;
+          return row.getValue(id) === value;
+        },
       },
-      cell: ({ row }) => {
-        const status = row.getValue('status') as DocumentStatus;
-        const config = statusConfig[status];
-        const StatusIcon = config.icon;
-        const isProcessing = status === 'processing';
-        
-        return (
-          <Badge variant={config.variant} className="flex items-center gap-1 w-fit">
-            <StatusIcon className={`w-3 h-3 ${isProcessing ? 'animate-spin' : ''}`} />
-            {config.label}
-          </Badge>
-        );
+      {
+        accessorKey: "qualityScore",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="hover:bg-transparent p-0"
+            >
+              Quality
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          );
+        },
+        cell: ({ row }) => {
+          const score = row.getValue("qualityScore") as number | undefined;
+          return score !== undefined ? (
+            <QualityBadge qualityScore={score} />
+          ) : (
+            <span className="text-sm text-gray-400">-</span>
+          );
+        },
+        sortingFn: (rowA, rowB) => {
+          const scoreA =
+            (rowA.getValue("qualityScore") as number | undefined) ?? -1;
+          const scoreB =
+            (rowB.getValue("qualityScore") as number | undefined) ?? -1;
+          return scoreA - scoreB;
+        },
+        filterFn: (row, id, value) => {
+          if (value === "all") return true;
+          const score = row.getValue(id) as number | undefined;
+          if (score === undefined) return false;
+
+          if (value === "high") return score > 85;
+          if (value === "medium") return score >= 70 && score <= 85;
+          if (value === "low") return score < 70;
+          return true;
+        },
       },
-      sortingFn: (rowA, rowB) => {
-        const statusA = rowA.getValue('status') as DocumentStatus;
-        const statusB = rowB.getValue('status') as DocumentStatus;
-        return statusOrder[statusA] - statusOrder[statusB];
+      {
+        accessorKey: "uploadedAt",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="hover:bg-transparent p-0"
+            >
+              Date Uploaded
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          );
+        },
+        cell: ({ row }) => {
+          const date = row.getValue("uploadedAt") as Date;
+          return (
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {new Date(date).toLocaleString()}
+            </span>
+          );
+        },
+        sortingFn: (rowA, rowB) => {
+          const dateA = new Date(rowA.getValue("uploadedAt") as Date).getTime();
+          const dateB = new Date(rowB.getValue("uploadedAt") as Date).getTime();
+          return dateA - dateB;
+        },
       },
-      filterFn: (row, id, value) => {
-        if (value === 'all') return true;
-        return row.getValue(id) === value;
-      },
-    },
-    {
-      accessorKey: 'qualityScore',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="hover:bg-transparent p-0"
-          >
-            Quality
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        const score = row.getValue('qualityScore') as number | undefined;
-        return score !== undefined ? (
-          <QualityBadge qualityScore={score} />
-        ) : (
-          <span className="text-sm text-gray-400">-</span>
-        );
-      },
-      sortingFn: (rowA, rowB) => {
-        const scoreA = rowA.getValue('qualityScore') as number | undefined ?? -1;
-        const scoreB = rowB.getValue('qualityScore') as number | undefined ?? -1;
-        return scoreA - scoreB;
-      },
-      filterFn: (row, id, value) => {
-        if (value === 'all') return true;
-        const score = row.getValue(id) as number | undefined;
-        if (score === undefined) return false;
-        
-        if (value === 'high') return score > 85;
-        if (value === 'medium') return score >= 70 && score <= 85;
-        if (value === 'low') return score < 70;
-        return true;
-      },
-    },
-    {
-      accessorKey: 'uploadedAt',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="hover:bg-transparent p-0"
-          >
-            Date Uploaded
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        const date = row.getValue('uploadedAt') as Date;
-        return (
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            {new Date(date).toLocaleString()}
-          </span>
-        );
-      },
-      sortingFn: (rowA, rowB) => {
-        const dateA = new Date(rowA.getValue('uploadedAt') as Date).getTime();
-        const dateB = new Date(rowB.getValue('uploadedAt') as Date).getTime();
-        return dateA - dateB;
-      },
-    },
-    {
-      id: 'actions',
-      header: () => <div className="text-right">Actions</div>,
-      cell: ({ row }) => {
-        const doc = row.original;
-        
-        return (
-          <div className="flex items-center justify-end gap-2">
-            {doc.status === 'done' && (
+      {
+        id: "actions",
+        header: () => <div className="text-right">Actions</div>,
+        cell: ({ row }) => {
+          const doc = row.original;
+
+          return (
+            <div className="flex items-center justify-end gap-2">
+              {doc.status === "done" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  title="View details"
+                  onClick={() => {
+                    setSelectedDocumentId(doc.id);
+                    setEditedData(doc.extractedData ?? null);
+                  }}
+                >
+                  <Eye className="w-4 h-4" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
-                title="View details"
+                onClick={() => deleteDocument(doc.id)}
+                title="Delete document"
               >
-                <Eye className="w-4 h-4" />
+                <XCircle className="w-4 h-4" />
               </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => deleteDocument(doc.id)}
-              title="Delete document"
-            >
-              <XCircle className="w-4 h-4" />
-            </Button>
-          </div>
-        );
+            </div>
+          );
+        },
       },
-    },
-  ], [deleteDocument]);
+    ],
+    [deleteDocument]
+  );
 
-  const filteredData = useMemo(() => documents.filter((doc) => {
-    if (statusFilter !== 'all' && doc.status !== statusFilter) return false;
-    
-    if (qualityFilter !== 'all' && doc.qualityScore !== undefined) {
-      if (qualityFilter === 'high' && doc.qualityScore <= 85) return false;
-      if (qualityFilter === 'medium' && (doc.qualityScore < 70 || doc.qualityScore > 85)) return false;
-      if (qualityFilter === 'low' && doc.qualityScore >= 70) return false;
-    }
-    
-    return true;
-  }), [documents, statusFilter, qualityFilter]);
+  const selectedDocument =
+    documents.find((d) => d.id === selectedDocumentId) ?? null;
+
+  const handleFieldChange = (field: string, value: any) => {
+    setEditedData((prev: any) => ({ ...(prev || {}), [field]: value }));
+  };
+
+  const saveReview = () => {
+    if (!selectedDocument || !editedData) return;
+    setDocumentData(
+      selectedDocument.id,
+      editedData,
+      selectedDocument.qualityScore ?? 0
+    );
+    // keep document in 'done' state to mark reviewed
+    updateDocumentStatus(selectedDocument.id, "done");
+    setSelectedDocumentId(null);
+    setEditedData(null);
+  };
+
+  const closeReview = () => {
+    setSelectedDocumentId(null);
+    setEditedData(null);
+  };
+
+  const filteredData = useMemo(
+    () =>
+      documents.filter((doc) => {
+        if (statusFilter !== "all" && doc.status !== statusFilter) return false;
+
+        if (qualityFilter !== "all" && doc.qualityScore !== undefined) {
+          if (qualityFilter === "high" && doc.qualityScore <= 85) return false;
+          if (
+            qualityFilter === "medium" &&
+            (doc.qualityScore < 70 || doc.qualityScore > 85)
+          )
+            return false;
+          if (qualityFilter === "low" && doc.qualityScore >= 70) return false;
+        }
+
+        return true;
+      }),
+    [documents, statusFilter, qualityFilter]
+  );
 
   const table = useReactTable({
     data: filteredData,
@@ -259,13 +332,12 @@ export function DocumentsTable() {
   });
 
   const clearFilters = () => {
-    setStatusFilter('all');
-    setQualityFilter('all');
+    setStatusFilter("all");
+    setQualityFilter("all");
   };
 
-  const activeFilterCount = 
-    (statusFilter !== 'all' ? 1 : 0) + 
-    (qualityFilter !== 'all' ? 1 : 0);
+  const activeFilterCount =
+    (statusFilter !== "all" ? 1 : 0) + (qualityFilter !== "all" ? 1 : 0);
 
   if (documents.length === 0) {
     return (
@@ -382,6 +454,95 @@ export function DocumentsTable() {
           </TableBody>
         </Table>
       </div>
+      {selectedDocument && (
+        <div className="fixed right-6 top-20 w-[420px] max-h-[80vh] overflow-auto bg-white dark:bg-gray-900 border rounded shadow-lg p-4 z-50">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <h3 className="font-semibold">{selectedDocument.filename}</h3>
+              <p className="text-sm text-gray-500">
+                Status: {selectedDocument.status}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={closeReview}>
+                Close
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium">Extracted Data</h4>
+            {!editedData && (
+              <p className="text-sm text-gray-500">
+                No extracted data available.
+              </p>
+            )}
+            {editedData && (
+              <div className="space-y-2">
+                {Object.keys(editedData).map((key) => {
+                  const val = editedData[key];
+                  if (typeof val === "boolean") {
+                    return (
+                      <label
+                        key={key}
+                        className="flex items-center justify-between"
+                      >
+                        <span className="text-sm capitalize">
+                          {key.replace(/_/g, " ")}
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={!!val}
+                          onChange={(e) =>
+                            handleFieldChange(key, e.target.checked)
+                          }
+                        />
+                      </label>
+                    );
+                  }
+
+                  if (typeof val === "number") {
+                    return (
+                      <label key={key} className="flex flex-col">
+                        <span className="text-sm">
+                          {key.replace(/_/g, " ")}
+                        </span>
+                        <input
+                          className="border rounded px-2 py-1"
+                          type="number"
+                          value={val}
+                          onChange={(e) =>
+                            handleFieldChange(key, Number(e.target.value))
+                          }
+                        />
+                      </label>
+                    );
+                  }
+
+                  return (
+                    <label key={key} className="flex flex-col">
+                      <span className="text-sm">{key.replace(/_/g, " ")}</span>
+                      <input
+                        className="border rounded px-2 py-1"
+                        type="text"
+                        value={val ?? ""}
+                        onChange={(e) => handleFieldChange(key, e.target.value)}
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-3">
+              <Button variant="ghost" onClick={closeReview}>
+                Cancel
+              </Button>
+              <Button onClick={saveReview}>Save Review</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
