@@ -1,10 +1,11 @@
 import { create } from 'zustand';
-import { Document, DocumentStatus } from '../types';
+import { Document, DocumentStatus, ExtractedData } from '../types';
 
 interface DocumentStore {
   documents: Document[];
-  addDocument: (file: File) => void;
+  addDocument: (file: File) => string;
   updateDocumentStatus: (id: string, status: DocumentStatus, error?: string) => void;
+  setDocumentData: (id: string, data: ExtractedData, qualityScore: number) => void;
   deleteDocument: (id: string) => void;
 }
 
@@ -22,12 +23,30 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
     set((state) => ({
       documents: [...state.documents, newDocument],
     }));
+    
+    return newDocument.id;
   },
   
   updateDocumentStatus: (id: string, status: DocumentStatus, error?: string) => {
     set((state) => ({
       documents: state.documents.map((doc) =>
         doc.id === id ? { ...doc, status, error } : doc
+      ),
+    }));
+  },
+  
+  setDocumentData: (id: string, data: ExtractedData, qualityScore: number) => {
+    set((state) => ({
+      documents: state.documents.map((doc) =>
+        doc.id === id 
+          ? { 
+              ...doc, 
+              extractedData: data, 
+              qualityScore,
+              processedAt: new Date(),
+              status: 'done' as DocumentStatus,
+            } 
+          : doc
       ),
     }));
   },
