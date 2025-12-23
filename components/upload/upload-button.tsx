@@ -8,6 +8,8 @@ import { useDocumentStore } from '@/lib/store/document-store';
 export function UploadButton() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const addDocument = useDocumentStore((state) => state.addDocument);
+  const activeDatasetId = useDocumentStore((state) => state.activeDatasetId);
+  const createDataset = useDocumentStore((state) => state.createDataset);
   const updateDocumentStatus = useDocumentStore((state) => state.updateDocumentStatus);
   const setDocumentData = useDocumentStore((state) => state.setDocumentData);
 
@@ -54,6 +56,11 @@ export function UploadButton() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
+
+    // Ensure there is an active dataset; create a default one if none selected
+    if (!activeDatasetId) {
+      createDataset('Untitled');
+    }
 
     // Process files without blocking the UI
     Array.from(files).forEach((file) => {

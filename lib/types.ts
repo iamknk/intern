@@ -34,6 +34,17 @@ export interface ExtractedData {
   confidence?: Record<string, number>;
 }
 
+export interface Dataset {
+  id: string;
+  name: string;
+  createdAt: Date;
+  description?: string;
+  documentIds?: string[];
+  // optional category pills/tags for UI grouping
+  categories?: string[];
+  color?: string;
+}
+
 export interface Document {
   id: string;
   filename: string;
@@ -45,5 +56,7 @@ export interface Document {
   processedAt?: Date;
   isReviewed?: boolean;
   hasUnsavedChanges?: boolean;
+  // allow multiple dataset membership (tags)
+  datasetIds?: string[];
 }
 

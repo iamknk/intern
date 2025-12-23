@@ -3,6 +3,7 @@
 import { Dropzone } from "@/components/upload/dropzone";
 import { DocumentsTable } from "@/components/documents/documents-table";
 import { UploadButton } from "@/components/upload/upload-button";
+import DatasetSelector from "@/components/datasets/dataset-selector";
 import { useDocumentStore } from "@/lib/store/document-store";
 
 export default function Home() {
@@ -22,14 +23,19 @@ export default function Home() {
                 Upload your PDF documents lease agreements to get excel sheets with the data
               </p>
             </div>
-            {hasDocuments && <UploadButton />}
+            {hasDocuments && (
+              <div className="flex items-center gap-3">
+                <DatasetSelector />
+                <UploadButton />
+              </div>
+            )}
           </div>
 
           {!hasDocuments ? (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
               <Dropzone />
             </div>
-          ) : (
+            ) : (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <DocumentsTable />
             </div>

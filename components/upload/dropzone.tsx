@@ -8,6 +8,8 @@ import { useDocumentStore } from '@/lib/store/document-store';
 export function Dropzone() {
   const [error, setError] = useState<string | null>(null);
   const addDocument = useDocumentStore((state) => state.addDocument);
+  const activeDatasetId = useDocumentStore((state) => state.activeDatasetId);
+  const createDataset = useDocumentStore((state) => state.createDataset);
   const updateDocumentStatus = useDocumentStore((state) => state.updateDocumentStatus);
   const setDocumentData = useDocumentStore((state) => state.setDocumentData);
 
@@ -77,6 +79,10 @@ export function Dropzone() {
       }
 
       acceptedFiles.forEach((file) => {
+        // ensure there is an active dataset for categorization
+        if (!activeDatasetId) {
+          createDataset('Untitled');
+        }
         const documentId = addDocument(file);
         processFile(file, documentId);
       });

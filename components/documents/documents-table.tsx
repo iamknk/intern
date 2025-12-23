@@ -21,6 +21,8 @@ import {
   Eye,
   ArrowUpDown,
   Filter,
+  Plus,
+  X,
 } from "lucide-react";
 import { useDocumentStore } from "@/lib/store/document-store";
 import { Badge } from "@/components/ui/badge";
@@ -41,8 +43,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { QualityBadge } from "./quality-badge";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+} from "@/components/ui/dropdown-menu";
+// Quality column removed per UI update
 import FieldEditor from "./field-editor";
+import CreateDatasetModal from "@/components/datasets/create-dataset-modal";
+import type { Dataset } from "@/lib/types";
 import type { Document, DocumentStatus } from "@/lib/types";
 
 const statusConfig: Record<
@@ -91,9 +101,87 @@ export function DocumentsTable() {
     null
   );
   const [editedData, setEditedData] = useState<any>(null);
+  const [pillDialogOpen, setPillDialogOpen] = useState(false);
+  const [selectedPill, setSelectedPill] = useState<string | undefined>(undefined);
+  const datasets = useDocumentStore((s) => s.datasets);
+  const selectDataset = useDocumentStore((s) => s.selectDataset);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const columns: ColumnDef<Document>[] = useMemo(
     () => [
+      {
+        id: "dataset",
+        header: () => <div className="text-sm">Datasets</div>,
+        cell: ({ row }) => {
+          const doc = row.original;
+          const docDatasetIds = doc.datasetIds ?? [];
+
+          const selected = datasets.filter((d) => (docDatasetIds ?? []).includes(d.id));
+          return (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                {selected.length > 0 ? (
+                  selected.map((d) => (
+                    <button
+                      key={d.id}
+                      onClick={() => useDocumentStore.getState().removeDocumentFromDataset(d.id, doc.id)}
+                      title={`Remove ${d.name}`}
+                      className="flex items-center gap-2 px-2 py-0.5 rounded-full text-xs text-white"
+                      style={{ background: d.color ?? "#60a5fa" }}
+                    >
+                      <span className="truncate max-w-[120px]">{d.name}</span>
+                      <X className="w-3 h-3 opacity-90" />
+                    </button>
+                  ))
+                ) : (
+                  <span className="text-sm text-gray-500">Uncategorized</span>
+                )}
+              </div>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="p-1">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[220px]">
+                  <div className="px-2 py-1 text-xs text-muted-foreground">Toggle datasets</div>
+                  {datasets.map((d: Dataset) => (
+                    <DropdownMenuCheckboxItem
+                      key={d.id}
+                      checked={(docDatasetIds ?? []).includes(d.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          useDocumentStore.getState().addDocumentToDataset(d.id, doc.id);
+                        } else {
+                          useDocumentStore.getState().removeDocumentFromDataset(d.id, doc.id);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-2 w-full">
+                        <span className="w-3 h-3 rounded-full" style={{ background: d.color ?? "#60a5fa" }} />
+                        <span className="truncate">{d.name}</span>
+                      </div>
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                  <div className="px-2 py-1">
+                    <button
+                      className="text-sm text-blue-600"
+                      onClick={() => {
+                        // open create modal
+                        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                        setCreateModalOpen(true);
+                      }}
+                    >
+                      + Create new dataset
+                    </button>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        },
+      },
       {
         accessorKey: "filename",
         header: ({ column }) => {
@@ -175,48 +263,7 @@ export function DocumentsTable() {
           return row.getValue(id) === value;
         },
       },
-      {
-        accessorKey: "qualityScore",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-              className="hover:bg-transparent p-0"
-            >
-              Quality
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          );
-        },
-        cell: ({ row }) => {
-          const score = row.getValue("qualityScore") as number | undefined;
-          return score !== undefined ? (
-            <QualityBadge qualityScore={score} />
-          ) : (
-            <span className="text-sm text-gray-400">-</span>
-          );
-        },
-        sortingFn: (rowA, rowB) => {
-          const scoreA =
-            (rowA.getValue("qualityScore") as number | undefined) ?? -1;
-          const scoreB =
-            (rowB.getValue("qualityScore") as number | undefined) ?? -1;
-          return scoreA - scoreB;
-        },
-        filterFn: (row, id, value) => {
-          if (value === "all") return true;
-          const score = row.getValue(id) as number | undefined;
-          if (score === undefined) return false;
-
-          if (value === "high") return score > 85;
-          if (value === "medium") return score >= 70 && score <= 85;
-          if (value === "low") return score < 70;
-          return true;
-        },
-      },
+      // Quality column intentionally removed to save space
       {
         accessorKey: "uploadedAt",
         header: ({ column }) => {
@@ -237,7 +284,7 @@ export function DocumentsTable() {
           const date = row.getValue("uploadedAt") as Date;
           return (
             <span className="text-sm text-gray-600 dark:text-gray-400">
-              {new Date(date).toLocaleString()}
+              {new Date(date).toLocaleDateString()}
             </span>
           );
         },
@@ -285,7 +332,7 @@ export function DocumentsTable() {
         },
       },
     ],
-    [deleteDocument, updateDocument, setUnsavedChanges]
+    [deleteDocument, updateDocument, setUnsavedChanges, datasets]
   );
 
   const selectedDocument =
@@ -442,7 +489,7 @@ export function DocumentsTable() {
         </p>
       )}
 
-      <div className="rounded-md border">
+      <div className="rounded-md border max-h-[192px] overflow-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -487,6 +534,28 @@ export function DocumentsTable() {
           </TableBody>
         </Table>
       </div>
+      {/* Bottom sticky footer with dataset badges */}
+      <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t p-3 mt-3">
+        <div className="flex items-center gap-2 overflow-auto">
+          {datasets.map((d: Dataset) => (
+            <button
+              key={d.id}
+              onClick={() => selectDataset(d.id)}
+              className="px-3 py-1 rounded-full flex items-center gap-2"
+              style={{ background: d.color ?? "#60a5fa" }}
+            >
+              <span className="text-sm font-medium text-white truncate max-w-[160px]">{d.name}</span>
+              <span className="text-xs text-white/90">{d.documentIds?.length ?? 0}</span>
+            </button>
+          ))}
+
+          <Button variant="outline" size="sm" onClick={() => setCreateModalOpen(true)}>
+            + New Dataset
+          </Button>
+        </div>
+      </div>
+
+      <CreateDatasetModal open={createModalOpen} onClose={() => setCreateModalOpen(false)} />
       {selectedDocument && (
         <div className="fixed right-6 top-20 w-[420px] max-h-[80vh] overflow-auto bg-white dark:bg-gray-900 border rounded shadow-lg p-4 z-50">
           <div className="flex items-start justify-between mb-3">
