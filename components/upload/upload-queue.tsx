@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { QualityBadge } from '@/components/documents/quality-badge';
 import type { DocumentStatus } from '@/lib/types';
 
 const statusConfig: Record<DocumentStatus, { icon: any; label: string; variant: any }> = {
@@ -78,7 +79,7 @@ export function UploadQueue() {
                   </TableCell>
                   <TableCell>
                     {doc.qualityScore !== undefined ? (
-                      <span className="text-sm font-medium">{doc.qualityScore}%</span>
+                      <QualityBadge qualityScore={doc.qualityScore} />
                     ) : (
                       <span className="text-sm text-gray-400">-</span>
                     )}

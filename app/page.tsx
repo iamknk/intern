@@ -1,13 +1,13 @@
 'use client';
 
 import { Dropzone } from "@/components/upload/dropzone";
-import { UploadQueue } from "@/components/upload/upload-queue";
+import { DocumentsTable } from "@/components/documents/documents-table";
 import { UploadButton } from "@/components/upload/upload-button";
 import { useDocumentStore } from "@/lib/store/document-store";
 
 export default function Home() {
-  const documents = useDocumentStore((state) => state.documents);
-  const hasDocuments = documents.length > 0;
+
+  const hasDocuments = useDocumentStore((state) => state.documents.length > 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
@@ -31,7 +31,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-              <UploadQueue />
+              <DocumentsTable />
             </div>
           )}
         </div>

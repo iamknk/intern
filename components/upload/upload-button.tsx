@@ -53,16 +53,18 @@ export function UploadButton() {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
+    // Process files without blocking the UI
     Array.from(files).forEach((file) => {
       if (file.type === 'application/pdf') {
         const documentId = addDocument(file);
+        // Start processing in background (non-blocking)
         processFile(file, documentId);
       }
     });
 
-    // Reset input
+    // Reset input immediately
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
