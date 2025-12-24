@@ -11,16 +11,16 @@ A Next.js application that allows users to upload lease agreement documents and 
 
 ## Table of Contents
 
-- [What Was Built](#-what-was-built)
-- [Getting Started](#-getting-started)
-- [Usage Guide](#-usage-guide)
-- [Screenshots](#-screenshots)
-- [Test Notes](#-test-notes)
-- [What's Next](#-whats-next)
+- [What Was Built](#what-was-built)
+- [Getting Started](#getting-started)
+- [Usage Guide](#usage-guide)
+- [Screenshots](#screenshots)
+- [Test Notes](#test-notes)
+- [What's Next](#whats-next)
 
 ---
 
-## [What Was Built](#-what-was-built)
+## [What Was Built](#what-was-built)
 
 This project is a **document processing platform** designed for lease agreement management. The application provides:
 
@@ -44,7 +44,7 @@ This project is a **document processing platform** designed for lease agreement 
 
 ---
 
-## [Getting Started](#-getting-started)
+## [Getting Started](#getting-started)
 
 ### Prerequisites
 
@@ -84,7 +84,7 @@ This project is a **document processing platform** designed for lease agreement 
 
    Navigate to [http://localhost:3000](http://localhost:3000)
 
-## [Usage Guide](#-usage-guide)
+## [Usage Guide](#usage-guide)
 
 ### 1. Upload Documents
 
@@ -118,7 +118,7 @@ This project is a **document processing platform** designed for lease agreement 
 
 ---
 
-## [Screenshots](#-screenshots)
+## [Screenshots](#screenshots)
 
 ### Home / Upload View
 
@@ -146,7 +146,7 @@ This project is a **document processing platform** designed for lease agreement 
 
 ---
 
-## [Test Notes](#-test-notes)
+## [Test Notes](#test-notes)
 
 ### Manual Testing Checklist
 
@@ -201,7 +201,7 @@ This project is a **document processing platform** designed for lease agreement 
 
 ---
 
-## [What's Next](#-whats-next)
+## [What's Next](#whats-next)
 
 ### Planned Features
 
