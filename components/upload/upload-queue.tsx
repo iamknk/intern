@@ -1,10 +1,18 @@
-'use client';
+"use client";
 
-import { FileText, CheckCircle, Clock, AlertCircle, XCircle, Loader2 } from 'lucide-react';
-import { useDocumentStore } from '@/lib/store/document-store';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
+import { toast } from "sonner";
+import {
+  FileText,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  XCircle,
+  Loader2,
+} from "lucide-react";
+import { useDocumentStore } from "@/lib/store/document-store";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -12,15 +20,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { QualityBadge } from '@/components/documents/quality-badge';
-import type { DocumentStatus } from '@/lib/types';
+} from "@/components/ui/table";
+import { QualityBadge } from "@/components/documents/quality-badge";
+import type { DocumentStatus } from "@/lib/types";
 
-const statusConfig: Record<DocumentStatus, { icon: any; label: string; variant: any }> = {
-  queued: { icon: Clock, label: 'Queued', variant: 'secondary' },
-  processing: { icon: Loader2, label: 'Processing', variant: 'default' },
-  done: { icon: CheckCircle, label: 'Done', variant: 'default' },
-  failed: { icon: AlertCircle, label: 'Failed', variant: 'destructive' },
+const statusConfig: Record<
+  DocumentStatus,
+  { icon: any; label: string; variant: any }
+> = {
+  queued: { icon: Clock, label: "Queued", variant: "secondary" },
+  processing: { icon: Loader2, label: "Processing", variant: "default" },
+  done: { icon: CheckCircle, label: "Done", variant: "default" },
+  failed: { icon: AlertCircle, label: "Failed", variant: "destructive" },
 };
 
 export function UploadQueue() {
@@ -51,7 +62,7 @@ export function UploadQueue() {
             {documents.map((doc) => {
               const config = statusConfig[doc.status];
               const StatusIcon = config.icon;
-              const isProcessing = doc.status === 'processing';
+              const isProcessing = doc.status === "processing";
 
               return (
                 <TableRow key={doc.id}>
@@ -72,8 +83,15 @@ export function UploadQueue() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={config.variant} className="flex items-center gap-1 w-fit">
-                      <StatusIcon className={`w-3 h-3 ${isProcessing ? 'animate-spin' : ''}`} />
+                    <Badge
+                      variant={config.variant}
+                      className="flex items-center gap-1 w-fit"
+                    >
+                      <StatusIcon
+                        className={`w-3 h-3 ${
+                          isProcessing ? "animate-spin" : ""
+                        }`}
+                      />
                       {config.label}
                     </Badge>
                   </TableCell>
@@ -93,7 +111,14 @@ export function UploadQueue() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => deleteDocument(doc.id)}
+                      onClick={() => {
+                        deleteDocument(doc.id);
+                        toast("Document deleted", {
+                          description: `"${doc.filename}" has been removed.`,
+                          icon: <CheckCircle className="w-4 h-4 text-red-500" />,
+                          className: "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800",
+                        });
+                      }}
                     >
                       <XCircle className="w-4 h-4" />
                     </Button>
@@ -107,4 +132,3 @@ export function UploadQueue() {
     </div>
   );
 }
-

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import type { ExtractedData } from "@/lib/types";
 
 type Props = {
@@ -14,10 +14,18 @@ export default function FieldEditor({ data, onChange }: Props) {
   const [local, setLocal] = useState<ExtractedData>({ ...data });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Reset when the component receives completely new data (different document)
+  // We use a stable ID based on document filename or a unique field combination
+  const documentKey = `${data.name}-${data.surname}-${data.date}-${data.address_street}`;
+  const prevDocumentKey = useRef(documentKey);
+
   useEffect(() => {
-    setLocal({ ...data });
-    setErrors({});
-  }, [data]);
+    if (prevDocumentKey.current !== documentKey) {
+      prevDocumentKey.current = documentKey;
+      setLocal({ ...data });
+      setErrors({});
+    }
+  }, [data, documentKey]);
 
   const validateField = (key: string, value: any): string | null => {
     switch (key) {
@@ -28,7 +36,8 @@ export default function FieldEditor({ data, onChange }: Props) {
       case "address_zip_code":
       case "address_city":
       case "landlord_entity":
-        if (!value || String(value).trim() === "") return "This field is required.";
+        if (!value || String(value).trim() === "")
+          return "This field is required.";
         return null;
       case "warm_rent":
       case "cold_rent":
@@ -37,7 +46,8 @@ export default function FieldEditor({ data, onChange }: Props) {
       case "notice_period_months":
         if (value === null || value === undefined || value === "") {
           // only warm_rent and cold_rent are required
-          if (key === "warm_rent" || key === "cold_rent") return "This field is required.";
+          if (key === "warm_rent" || key === "cold_rent")
+            return "This field is required.";
           return null;
         }
         if (Number.isNaN(Number(value))) return "Must be a number.";
@@ -70,10 +80,13 @@ export default function FieldEditor({ data, onChange }: Props) {
   };
 
   const fieldClass = () =>
-    "w-full rounded border px-2 py-1 border-gray-200 dark:border-gray-700";
+    "w-full rounded border px-2 py-1 border-gray-200 dark:border-gray-700 text-sm break-words";
 
   return (
-    <form className="space-y-3" onSubmit={(e) => e.preventDefault()}>
+    <form
+      className="space-y-3 overflow-hidden"
+      onSubmit={(e) => e.preventDefault()}
+    >
       <div className="grid grid-cols-1 gap-2">
         <label className="flex flex-col">
           <span className="text-sm font-medium">Name</span>
@@ -109,7 +122,11 @@ export default function FieldEditor({ data, onChange }: Props) {
             />
           </div>
           {errors["surname"] && (
-            <p id="err-surname" role="alert" className="text-xs text-red-600 mt-1">
+            <p
+              id="err-surname"
+              role="alert"
+              className="text-xs text-red-600 mt-1"
+            >
               {errors["surname"]}
             </p>
           )}
@@ -126,11 +143,17 @@ export default function FieldEditor({ data, onChange }: Props) {
                 value={local.address_street ?? ""}
                 onChange={(e) => handleChange("address_street", e.target.value)}
                 aria-invalid={!!errors["address_street"]}
-                aria-describedby={errors["address_street"] ? "err-address_street" : undefined}
+                aria-describedby={
+                  errors["address_street"] ? "err-address_street" : undefined
+                }
               />
             </div>
             {errors["address_street"] && (
-              <p id="err-address_street" role="alert" className="text-xs text-red-600 mt-1">
+              <p
+                id="err-address_street"
+                role="alert"
+                className="text-xs text-red-600 mt-1"
+              >
                 {errors["address_street"]}
               </p>
             )}
@@ -144,13 +167,23 @@ export default function FieldEditor({ data, onChange }: Props) {
                 className={fieldClass()}
                 type="text"
                 value={local.address_house_number ?? ""}
-                onChange={(e) => handleChange("address_house_number", e.target.value)}
+                onChange={(e) =>
+                  handleChange("address_house_number", e.target.value)
+                }
                 aria-invalid={!!errors["address_house_number"]}
-                aria-describedby={errors["address_house_number"] ? "err-address_house_number" : undefined}
+                aria-describedby={
+                  errors["address_house_number"]
+                    ? "err-address_house_number"
+                    : undefined
+                }
               />
             </div>
             {errors["address_house_number"] && (
-              <p id="err-address_house_number" role="alert" className="text-xs text-red-600 mt-1">
+              <p
+                id="err-address_house_number"
+                role="alert"
+                className="text-xs text-red-600 mt-1"
+              >
                 {errors["address_house_number"]}
               </p>
             )}
@@ -164,13 +197,23 @@ export default function FieldEditor({ data, onChange }: Props) {
                 className={fieldClass()}
                 type="text"
                 value={local.address_zip_code ?? ""}
-                onChange={(e) => handleChange("address_zip_code", e.target.value)}
+                onChange={(e) =>
+                  handleChange("address_zip_code", e.target.value)
+                }
                 aria-invalid={!!errors["address_zip_code"]}
-                aria-describedby={errors["address_zip_code"] ? "err-address_zip_code" : undefined}
+                aria-describedby={
+                  errors["address_zip_code"]
+                    ? "err-address_zip_code"
+                    : undefined
+                }
               />
             </div>
             {errors["address_zip_code"] && (
-              <p id="err-address_zip_code" role="alert" className="text-xs text-red-600 mt-1">
+              <p
+                id="err-address_zip_code"
+                role="alert"
+                className="text-xs text-red-600 mt-1"
+              >
                 {errors["address_zip_code"]}
               </p>
             )}
@@ -186,11 +229,17 @@ export default function FieldEditor({ data, onChange }: Props) {
                 value={local.address_city ?? ""}
                 onChange={(e) => handleChange("address_city", e.target.value)}
                 aria-invalid={!!errors["address_city"]}
-                aria-describedby={errors["address_city"] ? "err-address_city" : undefined}
+                aria-describedby={
+                  errors["address_city"] ? "err-address_city" : undefined
+                }
               />
             </div>
             {errors["address_city"] && (
-              <p id="err-address_city" role="alert" className="text-xs text-red-600 mt-1">
+              <p
+                id="err-address_city"
+                role="alert"
+                className="text-xs text-red-600 mt-1"
+              >
                 {errors["address_city"]}
               </p>
             )}
@@ -205,13 +254,24 @@ export default function FieldEditor({ data, onChange }: Props) {
               className={fieldClass()}
               type="number"
               value={local.warm_rent ?? ""}
-              onChange={(e) => handleChange("warm_rent", e.target.value === "" ? "" : Number(e.target.value))}
+              onChange={(e) =>
+                handleChange(
+                  "warm_rent",
+                  e.target.value === "" ? "" : Number(e.target.value)
+                )
+              }
               aria-invalid={!!errors["warm_rent"]}
-              aria-describedby={errors["warm_rent"] ? "err-warm_rent" : undefined}
+              aria-describedby={
+                errors["warm_rent"] ? "err-warm_rent" : undefined
+              }
             />
           </div>
           {errors["warm_rent"] && (
-            <p id="err-warm_rent" role="alert" className="text-xs text-red-600 mt-1">
+            <p
+              id="err-warm_rent"
+              role="alert"
+              className="text-xs text-red-600 mt-1"
+            >
               {errors["warm_rent"]}
             </p>
           )}
@@ -225,13 +285,24 @@ export default function FieldEditor({ data, onChange }: Props) {
               className={fieldClass()}
               type="number"
               value={local.cold_rent ?? ""}
-              onChange={(e) => handleChange("cold_rent", e.target.value === "" ? "" : Number(e.target.value))}
+              onChange={(e) =>
+                handleChange(
+                  "cold_rent",
+                  e.target.value === "" ? "" : Number(e.target.value)
+                )
+              }
               aria-invalid={!!errors["cold_rent"]}
-              aria-describedby={errors["cold_rent"] ? "err-cold_rent" : undefined}
+              aria-describedby={
+                errors["cold_rent"] ? "err-cold_rent" : undefined
+              }
             />
           </div>
           {errors["cold_rent"] && (
-            <p id="err-cold_rent" role="alert" className="text-xs text-red-600 mt-1">
+            <p
+              id="err-cold_rent"
+              role="alert"
+              className="text-xs text-red-600 mt-1"
+            >
               {errors["cold_rent"]}
             </p>
           )}
@@ -245,13 +316,22 @@ export default function FieldEditor({ data, onChange }: Props) {
               className={fieldClass()}
               type="number"
               value={local.deposit ?? ""}
-              onChange={(e) => handleChange("deposit", e.target.value === "" ? "" : Number(e.target.value))}
+              onChange={(e) =>
+                handleChange(
+                  "deposit",
+                  e.target.value === "" ? "" : Number(e.target.value)
+                )
+              }
               aria-invalid={!!errors["deposit"]}
               aria-describedby={errors["deposit"] ? "err-deposit" : undefined}
             />
           </div>
           {errors["deposit"] && (
-            <p id="err-deposit" role="alert" className="text-xs text-red-600 mt-1">
+            <p
+              id="err-deposit"
+              role="alert"
+              className="text-xs text-red-600 mt-1"
+            >
               {errors["deposit"]}
             </p>
           )}
@@ -265,13 +345,26 @@ export default function FieldEditor({ data, onChange }: Props) {
               className={fieldClass()}
               type="number"
               value={local.contract_term_months ?? ""}
-              onChange={(e) => handleChange("contract_term_months", e.target.value === "" ? "" : Number(e.target.value))}
+              onChange={(e) =>
+                handleChange(
+                  "contract_term_months",
+                  e.target.value === "" ? "" : Number(e.target.value)
+                )
+              }
               aria-invalid={!!errors["contract_term_months"]}
-              aria-describedby={errors["contract_term_months"] ? "err-contract_term_months" : undefined}
+              aria-describedby={
+                errors["contract_term_months"]
+                  ? "err-contract_term_months"
+                  : undefined
+              }
             />
           </div>
           {errors["contract_term_months"] && (
-            <p id="err-contract_term_months" role="alert" className="text-xs text-red-600 mt-1">
+            <p
+              id="err-contract_term_months"
+              role="alert"
+              className="text-xs text-red-600 mt-1"
+            >
               {errors["contract_term_months"]}
             </p>
           )}
@@ -285,13 +378,26 @@ export default function FieldEditor({ data, onChange }: Props) {
               className={fieldClass()}
               type="number"
               value={local.notice_period_months ?? ""}
-              onChange={(e) => handleChange("notice_period_months", e.target.value === "" ? "" : Number(e.target.value))}
+              onChange={(e) =>
+                handleChange(
+                  "notice_period_months",
+                  e.target.value === "" ? "" : Number(e.target.value)
+                )
+              }
               aria-invalid={!!errors["notice_period_months"]}
-              aria-describedby={errors["notice_period_months"] ? "err-notice_period_months" : undefined}
+              aria-describedby={
+                errors["notice_period_months"]
+                  ? "err-notice_period_months"
+                  : undefined
+              }
             />
           </div>
           {errors["notice_period_months"] && (
-            <p id="err-notice_period_months" role="alert" className="text-xs text-red-600 mt-1">
+            <p
+              id="err-notice_period_months"
+              role="alert"
+              className="text-xs text-red-600 mt-1"
+            >
               {errors["notice_period_months"]}
             </p>
           )}
@@ -300,24 +406,33 @@ export default function FieldEditor({ data, onChange }: Props) {
         <label className="flex flex-col">
           <span className="text-sm font-medium">Rent increase type</span>
           <div className="flex items-center">
-              <select
-                id="rent_increase_type"
-                className={fieldClass()}
-                value={(local.rent_increase_type as string) ?? ""}
-                onChange={(e) => handleChange("rent_increase_type", e.target.value)}
-                aria-invalid={!!errors["rent_increase_type"]}
-                aria-describedby={errors["rent_increase_type"] ? "err-rent_increase_type" : undefined}
-              >
+            <select
+              id="rent_increase_type"
+              className={fieldClass()}
+              value={(local.rent_increase_type as string) ?? ""}
+              onChange={(e) =>
+                handleChange("rent_increase_type", e.target.value)
+              }
+              aria-invalid={!!errors["rent_increase_type"]}
+              aria-describedby={
+                errors["rent_increase_type"]
+                  ? "err-rent_increase_type"
+                  : undefined
+              }
+            >
               <option value="">Select type</option>
               <option value={"fixed"}>Fixed</option>
               <option value={"indexed"}>Indexed</option>
               <option value={"stepped"}>Stepped</option>
               <option value={"none"}>None</option>
-              </select>
-              
+            </select>
           </div>
           {errors["rent_increase_type"] && (
-            <p id="err-rent_increase_type" role="alert" className="text-xs text-red-600 mt-1">
+            <p
+              id="err-rent_increase_type"
+              role="alert"
+              className="text-xs text-red-600 mt-1"
+            >
               {errors["rent_increase_type"]}
             </p>
           )}
@@ -355,7 +470,6 @@ export default function FieldEditor({ data, onChange }: Props) {
               onChange={(e) => handleChange("is_active", e.target.checked)}
               aria-checked={!!local.is_active}
             />
-            
           </div>
         </label>
 
@@ -369,11 +483,17 @@ export default function FieldEditor({ data, onChange }: Props) {
               value={local.landlord_entity ?? ""}
               onChange={(e) => handleChange("landlord_entity", e.target.value)}
               aria-invalid={!!errors["landlord_entity"]}
-              aria-describedby={errors["landlord_entity"] ? "err-landlord_entity" : undefined}
+              aria-describedby={
+                errors["landlord_entity"] ? "err-landlord_entity" : undefined
+              }
             />
           </div>
           {errors["landlord_entity"] && (
-            <p id="err-landlord_entity" role="alert" className="text-xs text-red-600 mt-1">
+            <p
+              id="err-landlord_entity"
+              role="alert"
+              className="text-xs text-red-600 mt-1"
+            >
               {errors["landlord_entity"]}
             </p>
           )}

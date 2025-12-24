@@ -9,7 +9,7 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, FileText, Download } from "lucide-react";
+import { ArrowUpDown, FileText, Download, Eye } from "lucide-react";
 import { useDocumentStore } from "@/lib/store/document-store";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +26,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import DetailedReviewModal from "./detailed-review-modal";
 import type { ExtractedData } from "@/lib/types";
 import { useState } from "react";
 
@@ -39,6 +40,7 @@ export function DatasetDataTable() {
   const activeDatasetId = useDocumentStore((state) => state.activeDatasetId);
   const datasets = useDocumentStore((state) => state.datasets);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [detailedReviewOpen, setDetailedReviewOpen] = useState(false);
 
   // Get documents for the active dataset that have extracted data
   const dataRows = useMemo(() => {
@@ -71,9 +73,12 @@ export function DatasetDataTable() {
       "Warm Rent",
       "Cold Rent",
       "Deposit",
+      "Contract Term (months)",
+      "Notice Period (months)",
       "Date",
       "Rent Increase Type",
       "Active",
+      "Landlord",
     ];
 
     const csvContent = [
@@ -90,9 +95,12 @@ export function DatasetDataTable() {
           row.warm_rent || "",
           row.cold_rent || "",
           row.deposit || "",
+          row.contract_term_months || "",
+          row.notice_period_months || "",
           `"${row.date || ""}"`,
           `"${row.rent_increase_type || ""}"`,
           row.is_active !== undefined ? (row.is_active ? "Yes" : "No") : "",
+          `"${row.landlord_entity || ""}"`,
         ].join(",")
       ),
     ].join("\n");
@@ -121,9 +129,12 @@ export function DatasetDataTable() {
       "Warm Rent": row.warm_rent || "",
       "Cold Rent": row.cold_rent || "",
       Deposit: row.deposit || "",
+      "Contract Term (months)": row.contract_term_months || "",
+      "Notice Period (months)": row.notice_period_months || "",
       Date: row.date || "",
       "Rent Increase Type": row.rent_increase_type || "",
       Active: row.is_active !== undefined ? (row.is_active ? "Yes" : "No") : "",
+      Landlord: row.landlord_entity || "",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
@@ -351,22 +362,33 @@ export function DatasetDataTable() {
               extracted data
             </p>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Download className="h-4 w-4" />
-                Export Data
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuItem onClick={exportToCSV}>
-                Export as CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={exportToXLSX}>
-                Export as XLSX
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => setDetailedReviewOpen(true)}
+            >
+              <Eye className="h-4 w-4" />
+              Detailed Review
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Download className="h-4 w-4" />
+                  Export Data
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={exportToCSV}>
+                  Export as CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportToXLSX}>
+                  Export as XLSX
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
 
@@ -415,6 +437,13 @@ export function DatasetDataTable() {
           </TableBody>
         </Table>
       </div>
+
+      <DetailedReviewModal
+        open={detailedReviewOpen}
+        onClose={() => setDetailedReviewOpen(false)}
+        dataRows={dataRows}
+        datasetName={activeDataset?.name}
+      />
     </div>
   );
 }

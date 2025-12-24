@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDocumentStore } from "@/lib/store/document-store";
@@ -62,17 +63,29 @@ export function UploadButton() {
         extractResult.extractedData,
         extractResult.qualityScore
       );
+      toast.success("File processed", {
+        description: `"${file.name}" has been uploaded and processed successfully.`,
+      });
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Processing failed";
       updateDocumentStatus(documentId, "failed", errorMessage);
+      toast.error("Processing failed", {
+        description: `Failed to process "${file.name}": ${errorMessage}`,
+      });
     }
   };
 
   const handleConfirmUpload = (filesWithDatasets: FileWithDatasets[]) => {
+    const fileCount = filesWithDatasets.length;
     filesWithDatasets.forEach(({ file, datasetIds }) => {
       const documentId = addDocumentWithDatasets(file, datasetIds);
       processFile(file, documentId);
+    });
+    toast.info("Upload started", {
+      description: `${fileCount} file${
+        fileCount !== 1 ? "s" : ""
+      } queued for processing.`,
     });
     setPendingFiles([]);
   };

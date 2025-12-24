@@ -160,7 +160,6 @@ export const useDocumentStore = create<DocumentStore>()(
         };
         set((state) => ({
           datasets: [...state.datasets, newDataset],
-          activeDatasetId: id,
         }));
         return id;
       },
