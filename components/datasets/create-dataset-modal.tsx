@@ -29,7 +29,7 @@ export default function CreateDatasetModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative w-[420px] bg-white dark:bg-gray-900 rounded shadow-lg p-4">
         <h3 className="text-lg font-semibold mb-2">Create Dataset</h3>
@@ -67,7 +67,9 @@ export default function CreateDatasetModal({
                 key={c}
                 onClick={() => setColor(c)}
                 aria-label={`Select color ${c}`}
-                className={`w-8 h-8 rounded-full border-2 ${color === c ? 'ring-2 ring-offset-1' : ''}`}
+                className={`w-8 h-8 rounded-full border-2 ${
+                  color === c ? "ring-2 ring-offset-1" : ""
+                }`}
                 style={{ background: c }}
                 type="button"
               />
@@ -77,7 +79,9 @@ export default function CreateDatasetModal({
         </div>
 
         <div className="flex items-center justify-end gap-2 mt-4">
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
           <Button onClick={handleCreate}>Create</Button>
         </div>
       </div>

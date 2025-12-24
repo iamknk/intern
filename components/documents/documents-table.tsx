@@ -49,9 +49,9 @@ import {
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
-// Quality column removed per UI update
 import FieldEditor from "./field-editor";
 import CreateDatasetModal from "@/components/datasets/create-dataset-modal";
+import ManageDatasetModal from "@/components/datasets/manage-dataset-modal";
 import type { Dataset } from "@/lib/types";
 import type { Document, DocumentStatus } from "@/lib/types";
 
@@ -82,14 +82,26 @@ const statusOrder: Record<DocumentStatus, number> = {
 };
 
 export function DocumentsTable() {
-  const documents = useDocumentStore((state) => state.documents);
+  const allDocuments = useDocumentStore((state) => state.documents);
+  const activeDatasetId = useDocumentStore((state) => state.activeDatasetId);
   const deleteDocument = useDocumentStore((state) => state.deleteDocument);
   const setDocumentData = useDocumentStore((state) => state.setDocumentData);
   const updateDocumentStatus = useDocumentStore(
     (state) => state.updateDocumentStatus
   );
   const updateDocument = useDocumentStore((state) => state.updateDocument);
-  const setUnsavedChanges = useDocumentStore((state) => state.setUnsavedChanges);
+  const setUnsavedChanges = useDocumentStore(
+    (state) => state.setUnsavedChanges
+  );
+
+  const documents = useMemo(() => {
+    if (!activeDatasetId) {
+      return allDocuments;
+    }
+    return allDocuments.filter((doc) =>
+      doc.datasetIds?.includes(activeDatasetId)
+    );
+  }, [allDocuments, activeDatasetId]);
 
   const [sorting, setSorting] = useState<SortingState>([
     { id: "uploadedAt", desc: true },
@@ -102,10 +114,14 @@ export function DocumentsTable() {
   );
   const [editedData, setEditedData] = useState<any>(null);
   const [pillDialogOpen, setPillDialogOpen] = useState(false);
-  const [selectedPill, setSelectedPill] = useState<string | undefined>(undefined);
+  const [selectedPill, setSelectedPill] = useState<string | undefined>(
+    undefined
+  );
   const datasets = useDocumentStore((s) => s.datasets);
   const selectDataset = useDocumentStore((s) => s.selectDataset);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [manageModalOpen, setManageModalOpen] = useState(false);
+  const [manageDocId, setManageDocId] = useState<string | null>(null);
 
   const columns: ColumnDef<Document>[] = useMemo(
     () => [
@@ -116,68 +132,36 @@ export function DocumentsTable() {
           const doc = row.original;
           const docDatasetIds = doc.datasetIds ?? [];
 
-          const selected = datasets.filter((d) => (docDatasetIds ?? []).includes(d.id));
+          const selected = datasets.filter((d) =>
+            (docDatasetIds ?? []).includes(d.id)
+          );
+
           return (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                {selected.length > 0 ? (
-                  selected.map((d) => (
-                    <button
-                      key={d.id}
-                      onClick={() => useDocumentStore.getState().removeDocumentFromDataset(d.id, doc.id)}
-                      title={`Remove ${d.name}`}
-                      className="flex items-center gap-2 px-2 py-0.5 rounded-full text-xs text-white"
-                      style={{ background: d.color ?? "#60a5fa" }}
-                    >
-                      <span className="truncate max-w-[120px]">{d.name}</span>
-                      <X className="w-3 h-3 opacity-90" />
-                    </button>
-                  ))
-                ) : (
-                  <span className="text-sm text-gray-500">Uncategorized</span>
-                )}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1 flex-wrap">
+                {selected.map((d) => (
+                  <span
+                    key={d.id}
+                    className="px-2 py-0.5 rounded-full text-xs text-white whitespace-nowrap"
+                    style={{ background: d.color ?? "#60a5fa" }}
+                  >
+                    {d.name}
+                  </span>
+                ))}
               </div>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="p-1">
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-[220px]">
-                  <div className="px-2 py-1 text-xs text-muted-foreground">Toggle datasets</div>
-                  {datasets.map((d: Dataset) => (
-                    <DropdownMenuCheckboxItem
-                      key={d.id}
-                      checked={(docDatasetIds ?? []).includes(d.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          useDocumentStore.getState().addDocumentToDataset(d.id, doc.id);
-                        } else {
-                          useDocumentStore.getState().removeDocumentFromDataset(d.id, doc.id);
-                        }
-                      }}
-                    >
-                      <div className="flex items-center gap-2 w-full">
-                        <span className="w-3 h-3 rounded-full" style={{ background: d.color ?? "#60a5fa" }} />
-                        <span className="truncate">{d.name}</span>
-                      </div>
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                  <div className="px-2 py-1">
-                    <button
-                      className="text-sm text-blue-600"
-                      onClick={() => {
-                        // open create modal
-                        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-                        setCreateModalOpen(true);
-                      }}
-                    >
-                      + Create new dataset
-                    </button>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-0.5 h-6 w-6 shrink-0 ml-auto"
+                onClick={() => {
+                  setManageDocId(doc.id);
+                  setManageModalOpen(true);
+                }}
+                title="Manage datasets"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
             </div>
           );
         },
@@ -244,7 +228,9 @@ export function DocumentsTable() {
           return (
             <Badge
               variant={config.variant}
-              className={`flex items-center gap-1 w-fit ${config.className ?? ""}`}
+              className={`flex items-center gap-1 w-fit ${
+                config.className ?? ""
+              }`}
             >
               <StatusIcon
                 className={`w-3 h-3 ${isProcessing ? "animate-spin" : ""}`}
@@ -302,7 +288,9 @@ export function DocumentsTable() {
 
           return (
             <div className="flex items-center justify-end gap-2">
-              {(doc.status === "done" || doc.status === "awaiting_review" || doc.status === "reviewed") && (
+              {(doc.status === "done" ||
+                doc.status === "awaiting_review" ||
+                doc.status === "reviewed") && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -435,7 +423,12 @@ export function DocumentsTable() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-          Documents ({documents.length})
+          {activeDatasetId
+            ? `${
+                datasets.find((d) => d.id === activeDatasetId)?.name ??
+                "Dataset"
+              } (${documents.length})`
+            : `Documents (${documents.length})`}
         </h2>
       </div>
 
@@ -544,18 +537,41 @@ export function DocumentsTable() {
               className="px-3 py-1 rounded-full flex items-center gap-2"
               style={{ background: d.color ?? "#60a5fa" }}
             >
-              <span className="text-sm font-medium text-white truncate max-w-[160px]">{d.name}</span>
-              <span className="text-xs text-white/90">{d.documentIds?.length ?? 0}</span>
+              <span className="text-sm font-medium text-white truncate max-w-[160px]">
+                {d.name}
+              </span>
+              <span className="text-xs text-white/90">
+                {d.documentIds?.length ?? 0}
+              </span>
             </button>
           ))}
 
-          <Button variant="outline" size="sm" onClick={() => setCreateModalOpen(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCreateModalOpen(true)}
+          >
             + New Dataset
           </Button>
         </div>
       </div>
 
-      <CreateDatasetModal open={createModalOpen} onClose={() => setCreateModalOpen(false)} />
+      <CreateDatasetModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+      />
+
+      {manageDocId && (
+        <ManageDatasetModal
+          open={manageModalOpen}
+          onClose={() => {
+            setManageModalOpen(false);
+            setManageDocId(null);
+          }}
+          documentId={manageDocId}
+        />
+      )}
+
       {selectedDocument && (
         <div className="fixed right-6 top-20 w-[420px] max-h-[80vh] overflow-auto bg-white dark:bg-gray-900 border rounded shadow-lg p-4 z-50">
           <div className="flex items-start justify-between mb-3">
@@ -575,7 +591,9 @@ export function DocumentsTable() {
           <div className="space-y-3">
             <h4 className="text-sm font-medium">Extracted Data</h4>
             {!editedData && (
-              <p className="text-sm text-gray-500">No extracted data available.</p>
+              <p className="text-sm text-gray-500">
+                No extracted data available.
+              </p>
             )}
             {editedData && (
               <FieldEditor
@@ -584,7 +602,9 @@ export function DocumentsTable() {
                   setEditedData(d);
                   if (selectedDocumentId) {
                     setUnsavedChanges(selectedDocumentId, true);
-                    updateDocument(selectedDocumentId, { hasUnsavedChanges: true });
+                    updateDocument(selectedDocumentId, {
+                      hasUnsavedChanges: true,
+                    });
                   }
                 }}
               />
