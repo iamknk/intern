@@ -17,7 +17,7 @@ export default function DatasetSidebar() {
   };
 
   return (
-    <aside className="w-64 bg-gray-900 text-white min-h-screen flex flex-col">
+    <aside className="w-64 bg-gray-900 text-white h-screen flex flex-col overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-gray-700">
         <h1 className="text-lg font-bold">Geni AI Agent</h1>
@@ -54,7 +54,14 @@ export default function DatasetSidebar() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-2 space-y-1">
+        <div
+          className="flex-1 overflow-y-scroll px-2 space-y-1"
+          style={{
+            scrollbarWidth: "thin",
+            scrollbarColor: "#6b7280 #374151",
+            scrollbarGutter: "stable",
+          }}
+        >
           {datasets.length === 0 ? (
             <p className="text-xs text-gray-500 px-3 py-2">
               No datasets yet. Create one above.

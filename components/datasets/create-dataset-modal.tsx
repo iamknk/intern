@@ -31,27 +31,35 @@ export default function CreateDatasetModal({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-[420px] bg-white dark:bg-gray-900 rounded shadow-lg p-4">
-        <h3 className="text-lg font-semibold mb-2">Create Dataset</h3>
+      <div className="relative z-10 w-[420px] bg-white dark:bg-gray-900 rounded shadow-lg p-4">
+        <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
+          Create Dataset
+        </h3>
 
         <div className="space-y-2">
-          <label className="text-sm">Name</label>
+          <label className="text-sm text-gray-700 dark:text-gray-300">
+            Name
+          </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Dataset name"
-            className="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800"
+            className="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400"
           />
 
-          <label className="text-sm">Description (optional)</label>
+          <label className="text-sm text-gray-700 dark:text-gray-300">
+            Description (optional)
+          </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Notes about this dataset"
-            className="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800"
+            className="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400"
             rows={3}
           />
-          <label className="text-sm">Badge color</label>
+          <label className="text-sm text-gray-700 dark:text-gray-300">
+            Badge color
+          </label>
           <div className="flex items-center gap-3">
             {[
               "#60a5fa",
@@ -74,12 +82,15 @@ export default function CreateDatasetModal({
                 type="button"
               />
             ))}
-            <div className="text-sm text-gray-500">Pick a badge color</div>
           </div>
         </div>
 
         <div className="flex items-center justify-end gap-2 mt-4">
-          <Button variant="ghost" onClick={onClose}>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="text-gray-700 dark:text-gray-300"
+          >
             Cancel
           </Button>
           <Button onClick={handleCreate}>Create</Button>
