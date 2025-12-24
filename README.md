@@ -12,6 +12,7 @@ A Next.js application that allows users to upload lease agreement documents and 
 ## Table of Contents
 
 - [What Was Built](#what-was-built)
+- [Why Next.js, Shadcn & Zustand](#why-nextjs-shadcn--zustand)
 - [Getting Started](#getting-started)
 - [Usage Guide](#usage-guide)
 - [Screenshots](#screenshots)
@@ -41,6 +42,30 @@ This project is a **document processing platform** designed for lease agreement 
 - **Field Editor** - Inline editing for extracted data fields
 - **Quality Badge** - Visual indicator of extraction confidence scores
 - **Review Modals** - Detailed and manage dataset modals for data review
+
+---
+
+## [Why Next.js, Shadcn & Zustand](#why-nextjs-shadcn--zustand)
+
+### Next.js
+
+- **App Router & Server Components** - Uses the latest Next.js 16 App Router for file based routing and React Server Components for optimal performance
+- **API Routes** - Built-in API routes (`/api/upload`, `/api/extract`) eliminate the need for a separate backend server
+- **TypeScript First** - Excellent TypeScript support out of the box for type-safe development
+- **Fast Refresh** - Instant feedback during development with Hot Module Replacement
+
+### Shadcn/UI
+
+- **Copy-Paste Components** - Components are copied into your project, giving full ownership and customization control
+- **Radix UI Primitives** - Built on accessible, unstyled Radix UI primitives ensuring WCAG compliance
+- **Tailwind Integration** - Seamlessly integrates with Tailwind CSS for consistent styling
+- **No Runtime Dependency** - Unlike traditional component libraries, no external package to maintain or update
+
+### Zustand
+
+- **Minimal Boilerplate** - Simple API with no providers, reducers, or action creators required
+- **Lightweight** - Only ~1KB bundle size compared to Redux's larger footprint
+- **React 19 Compatible** - Works seamlessly with React 19's concurrent features
 
 ---
 
