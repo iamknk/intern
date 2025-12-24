@@ -151,7 +151,7 @@ export function DocumentsTable() {
                 {selected.map((d) => (
                   <span
                     key={d.id}
-                    className="px-2 py-0.5 rounded-full text-xs text-white whitespace-nowrap"
+                    className="px-2 py-0.5 rounded-full text-xs text-black whitespace-nowrap"
                     style={{ background: d.color ?? "#60a5fa" }}
                   >
                     {d.name}
