@@ -122,10 +122,11 @@ export function UploadButton() {
       />
       <Button
         onClick={() => fileInputRef.current?.click()}
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 h-10 sm:h-9 touch-target transition-hover"
       >
         <Upload className="w-4 h-4" />
-        Upload More
+        <span className="hidden sm:inline">Upload More</span>
+        <span className="sm:hidden">Upload</span>
       </Button>
 
       <UploadDatasetModal

@@ -1,17 +1,10 @@
 export type DocumentStatus =
-  | 'queued'
-  | 'processing'
-  | 'done'
-  | 'awaiting_review'
-  | 'reviewed'
-  | 'failed';
-
-export enum RentIncreaseType {
-  Fixed = 'fixed',
-  Indexed = 'indexed',
-  Stepped = 'stepped',
-  None = 'none',
-}
+  | "queued"
+  | "processing"
+  | "done"
+  | "awaiting_review"
+  | "reviewed"
+  | "failed";
 
 export interface ExtractedData {
   name: string;
@@ -22,15 +15,15 @@ export interface ExtractedData {
   address_city: string;
   warm_rent: number;
   cold_rent: number;
-  rent_increase_type: RentIncreaseType | string;
+  rent_increase_type: string;
   date: string;
   is_active: boolean;
-  
+
   deposit?: number;
   contract_term_months?: number;
   notice_period_months?: number;
   landlord_entity?: string;
-  
+
   confidence?: Record<string, number>;
 }
 
@@ -52,11 +45,10 @@ export interface Document {
   uploadedAt: Date;
   error?: string;
   extractedData?: ExtractedData;
-  qualityScore?: number; 
+  qualityScore?: number;
   processedAt?: Date;
   isReviewed?: boolean;
   hasUnsavedChanges?: boolean;
   // allow multiple dataset membership (tags)
   datasetIds?: string[];
 }
-

@@ -31,6 +31,12 @@ const statusConfig: Record<
   queued: { icon: Clock, label: "Queued", variant: "secondary" },
   processing: { icon: Loader2, label: "Processing", variant: "default" },
   done: { icon: CheckCircle, label: "Done", variant: "default" },
+  awaiting_review: {
+    icon: Clock,
+    label: "Awaiting Review",
+    variant: "outline",
+  },
+  reviewed: { icon: CheckCircle, label: "Reviewed", variant: "default" },
   failed: { icon: AlertCircle, label: "Failed", variant: "destructive" },
 };
 
@@ -115,8 +121,11 @@ export function UploadQueue() {
                         deleteDocument(doc.id);
                         toast("Document deleted", {
                           description: `"${doc.filename}" has been removed.`,
-                          icon: <CheckCircle className="w-4 h-4 text-red-500" />,
-                          className: "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800",
+                          icon: (
+                            <CheckCircle className="w-4 h-4 text-red-500" />
+                          ),
+                          className:
+                            "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800",
                         });
                       }}
                     >

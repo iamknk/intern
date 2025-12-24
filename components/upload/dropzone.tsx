@@ -112,28 +112,34 @@ export function Dropzone() {
         {...getRootProps()}
         className={`
           flex flex-col items-center justify-center
-          min-h-[250px] p-8 rounded-lg border-2 border-dashed
-          transition-colors cursor-pointer
+          min-h-[200px] sm:min-h-[250px] p-6 sm:p-8 rounded-xl border-2 border-dashed
+          transition-hover cursor-pointer
           ${
             isDragActive
               ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
-              : "border-gray-300 dark:border-gray-600 hover:border-gray-400"
+              : "border-gray-300 dark:border-gray-600 hover:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50"
           }
         `}
       >
         <input {...getInputProps()} />
 
-        <Upload className="w-10 h-10 text-gray-400 mb-4" />
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+          <Upload className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+        </div>
 
-        <p className="text-lg text-gray-700 dark:text-gray-300 mb-2">
+        <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300 mb-2 text-center">
           {isDragActive ? "Drop files here" : "Drag & drop PDF files"}
         </p>
 
-        <p className="text-sm text-gray-500">or click to select</p>
+        <p className="text-sm text-gray-500 text-center">or click to select</p>
       </div>
 
       {error && (
-        <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>
+        <div className="mt-3 p-3 rounded-lg bg-status-error flex items-center gap-2">
+          <span className="text-sm text-red-600 dark:text-red-400">
+            {error}
+          </span>
+        </div>
       )}
 
       <UploadDatasetModal

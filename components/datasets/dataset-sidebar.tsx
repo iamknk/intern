@@ -3,9 +3,13 @@
 import React, { useState } from "react";
 import CreateDatasetModal from "./create-dataset-modal";
 import { useDocumentStore } from "@/lib/store/document-store";
-import { FileText } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 
-export default function DatasetSidebar() {
+interface DatasetSidebarProps {
+  onNavigate?: () => void;
+}
+
+export default function DatasetSidebar({ onNavigate }: DatasetSidebarProps) {
   const datasets = useDocumentStore((s) => s.datasets);
   const documents = useDocumentStore((s) => s.documents);
   const activeDatasetId = useDocumentStore((s) => s.activeDatasetId);
@@ -16,26 +20,32 @@ export default function DatasetSidebar() {
     return documents.filter((d) => d.datasetIds?.includes(datasetId)).length;
   };
 
+  const handleSelectDataset = (datasetId: string | null) => {
+    selectDataset(datasetId);
+    onNavigate?.();
+  };
+
   return (
     <>
-      <aside className="w-64 bg-gray-900 text-white h-screen flex flex-col overflow-hidden sticky top-0 left-0">
+      <aside className="w-full h-full bg-gray-900 text-white flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-gray-700">
           <h1 className="text-lg font-bold">Geni AI Agent</h1>
           <p className="text-xs text-gray-400">Documents · Datasets</p>
         </div>
 
+        {/* All Documents Button */}
         <div className="p-2">
           <button
-            onClick={() => selectDataset(null)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
+            onClick={() => handleSelectDataset(null)}
+            className={`w-full flex items-center gap-3 px-3 py-3 sm:py-2.5 rounded-lg text-left transition-hover touch-target ${
               activeDatasetId === null
                 ? "bg-blue-600 text-white"
                 : "hover:bg-gray-800 text-gray-300"
             }`}
           >
-            <FileText className="w-5 h-5" />
-            <div>
+            <FileText className="w-5 h-5 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
               <div className="font-medium text-sm">All Documents</div>
               <div className="text-xs opacity-70">
                 View all uploaded documents
@@ -44,19 +54,21 @@ export default function DatasetSidebar() {
           </button>
         </div>
 
+        {/* Datasets Section */}
         <div className="flex-1 overflow-hidden flex flex-col">
           <div className="flex items-center justify-between px-4 py-2">
             <h2 className="text-sm font-medium text-gray-400">Datasets</h2>
             <button
               onClick={() => setModalOpen(true)}
-              className="text-xs text-blue-400 hover:text-blue-300"
+              className="flex items-center gap-1 px-2 py-1.5 text-xs text-blue-400 hover:text-blue-300 hover:bg-gray-800 rounded transition-hover touch-target"
             >
-              New
+              <Plus className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">New</span>
             </button>
           </div>
 
           <div
-            className="flex-1 overflow-y-scroll px-2 space-y-1"
+            className="flex-1 overflow-y-auto px-2 pb-4 space-y-1"
             style={{
               scrollbarWidth: "thin",
               scrollbarColor: "#6b7280 #374151",
@@ -74,8 +86,8 @@ export default function DatasetSidebar() {
                 return (
                   <button
                     key={d.id}
-                    onClick={() => selectDataset(d.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                    onClick={() => handleSelectDataset(d.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-3 sm:py-2 rounded-lg text-left transition-hover touch-target ${
                       isActive
                         ? "bg-blue-600 text-white"
                         : "hover:bg-gray-800 text-gray-300"

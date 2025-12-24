@@ -110,9 +110,9 @@ export default function UploadDatasetModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-        <div className="relative w-[480px] max-h-[80vh] bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden flex flex-col">
+        <div className="relative w-full max-w-[480px] max-h-[85vh] bg-white dark:bg-gray-900 rounded-lg shadow-modal overflow-hidden flex flex-col animate-modal-in">
           {/* Header with Document Info */}
           <div className="p-4 border-b">
             <div className="flex items-center justify-between mb-3">
@@ -121,7 +121,7 @@ export default function UploadDatasetModal({
               </span>
               <button
                 onClick={onClose}
-                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="p-2 -mr-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-hover touch-target"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -151,7 +151,7 @@ export default function UploadDatasetModal({
               {selectedCount > 0 && (
                 <button
                   onClick={handleClearAll}
-                  className="text-xs text-gray-500 hover:text-gray-700"
+                  className="text-xs text-gray-500 hover:text-gray-700 transition-hover"
                 >
                   Clear all ({selectedCount})
                 </button>
@@ -160,13 +160,13 @@ export default function UploadDatasetModal({
 
             {/* Search Input */}
             <div className="relative mb-3">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search datasets..."
-                className="w-full pl-8 pr-3 py-2 text-sm border rounded-md bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-9 pr-3 py-2.5 h-11 sm:h-10 text-sm border rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-hover"
               />
             </div>
 
@@ -179,30 +179,32 @@ export default function UploadDatasetModal({
                   <button
                     key={dataset.id}
                     onClick={() => handleDatasetToggle(dataset.id)}
-                    className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                    className={`w-full flex items-center justify-between p-3 rounded-lg border transition-hover touch-target ${
                       isSelected
                         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                         : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <span
                         className="w-4 h-4 rounded-full shrink-0"
                         style={{ background: dataset.color ?? "#60a5fa" }}
                       />
-                      <div className="text-left">
-                        <p className="text-sm font-medium">{dataset.name}</p>
+                      <div className="text-left min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {dataset.name}
+                        </p>
                         {dataset.description && (
-                          <p className="text-xs text-gray-500 truncate max-w-[280px]">
+                          <p className="text-xs text-gray-500 truncate">
                             {dataset.description}
                           </p>
                         )}
                       </div>
                     </div>
                     <div
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
                         isSelected
-                          ? "border-blue-500 bg-blue-500"
+                          ? "border-blue-500 bg-blue-500 scale-110"
                           : "border-gray-300 dark:border-gray-600"
                       }`}
                     >
@@ -221,7 +223,7 @@ export default function UploadDatasetModal({
               {/* Create New */}
               <button
                 onClick={() => setCreateModalOpen(true)}
-                className="w-full flex items-center gap-3 p-3 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors"
+                className="w-full flex items-center gap-3 p-3 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-hover touch-target"
               >
                 <Plus className="w-4 h-4" />
                 <span className="text-sm">Create new dataset</span>
@@ -229,27 +231,43 @@ export default function UploadDatasetModal({
             </div>
           </div>
 
-          {/* Footer Navigation */}
-          <div className="flex items-center justify-between p-4 border-t bg-gray-50 dark:bg-gray-800/50">
+          {/* Footer Navigation - Responsive */}
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 p-4 border-t bg-gray-50 dark:bg-gray-800/50">
             <div>
               {files.length > 1 && (
-                <Button variant="ghost" size="sm" onClick={handleSkipAll}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSkipAll}
+                  className="w-full sm:w-auto h-10 sm:h-9 touch-target"
+                >
                   Skip all & Upload
                 </Button>
               )}
             </div>
             <div className="flex items-center gap-2">
               {!isFirstFile && (
-                <Button variant="outline" onClick={handlePrevious}>
+                <Button
+                  variant="outline"
+                  onClick={handlePrevious}
+                  className="flex-1 sm:flex-none h-10 sm:h-9 touch-target"
+                >
                   <ChevronLeft className="w-4 h-4 mr-1" />
-                  Previous
+                  <span className="hidden sm:inline">Previous</span>
                 </Button>
               )}
-              <Button onClick={handleNext}>
+              <Button
+                onClick={handleNext}
+                className="flex-1 sm:flex-none h-10 sm:h-9 touch-target"
+              >
                 {isLastFile ? (
-                  `Upload ${files.length} ${
-                    files.length === 1 ? "Document" : "Documents"
-                  }`
+                  <>
+                    <span className="hidden sm:inline">
+                      Upload {files.length}{" "}
+                      {files.length === 1 ? "Document" : "Documents"}
+                    </span>
+                    <span className="sm:hidden">Upload ({files.length})</span>
+                  </>
                 ) : (
                   <>
                     Next

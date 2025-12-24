@@ -341,58 +341,62 @@ export function DatasetDataTable() {
     return (
       <div className="text-center py-12 text-gray-500">
         <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-        <h3 className="text-lg font-medium mb-2">No extracted data</h3>
-        <p className="text-sm">
-          Documents in this dataset don&apos;t have extracted data yet.
-        </p>
+        <h3 className="text-lg font-medium mb-2">
+          No Documents added to this dataset
+        </h3>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="w-full flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              {activeDataset?.name} - Extracted Data
-            </h2>
-            <p className="text-sm text-gray-500">
-              {dataRows.length} document{dataRows.length !== 1 ? "s" : ""} with
-              extracted data
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => setDetailedReviewOpen(true)}
-            >
-              <Eye className="h-4 w-4" />
-              Detailed Review
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Download className="h-4 w-4" />
-                  Export Data
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem onClick={exportToCSV}>
-                  Export as CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={exportToXLSX}>
-                  Export as XLSX
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+      {/* Header - responsive layout */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-section-title text-gray-900 dark:text-white">
+            {activeDataset?.name} - Extracted Data
+          </h2>
+          <p className="text-metadata">
+            {dataRows.length} document{dataRows.length !== 1 ? "s" : ""} with
+            extracted data
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 h-10 sm:h-9 touch-target transition-hover"
+            onClick={() => setDetailedReviewOpen(true)}
+          >
+            <Eye className="h-4 w-4" />
+            <span className="hidden sm:inline">Detailed Review</span>
+            <span className="sm:hidden">Review</span>
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 h-10 sm:h-9 touch-target transition-hover"
+              >
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:inline">Export</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={exportToCSV} className="touch-target">
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportToXLSX} className="touch-target">
+                Export as XLSX
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
-      <div className="rounded-md border overflow-x-auto">
+      {/* Table with horizontal scroll on mobile */}
+      <div className="rounded-lg border shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -413,7 +417,10 @@ export function DatasetDataTable() {
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow
+                  key={row.id}
+                  className="transition-hover hover:bg-muted/50"
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="whitespace-nowrap">
                       {flexRender(

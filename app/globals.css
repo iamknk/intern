@@ -123,3 +123,204 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* =================== RESPONSIVE DESIGN & VISUAL POLISH =================== */
+
+/* Typography Scale */
+@layer utilities {
+  .text-page-title {
+    @apply text-xl sm:text-2xl font-semibold tracking-tight;
+  }
+  .text-section-title {
+    @apply text-lg sm:text-xl font-semibold;
+  }
+  .text-body {
+    @apply text-sm sm:text-base;
+  }
+  .text-metadata {
+    @apply text-xs sm:text-sm text-muted-foreground;
+  }
+}
+
+/* Touch-friendly targets (min 44x44px on mobile) */
+@layer utilities {
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0;
+  }
+}
+
+/* Status Colors with Icons (Accessibility) */
+@layer utilities {
+  .status-success {
+    @apply text-green-600 dark:text-green-400;
+  }
+  .status-error {
+    @apply text-red-600 dark:text-red-400;
+  }
+  .status-warning {
+    @apply text-yellow-600 dark:text-yellow-400;
+  }
+  .status-info {
+    @apply text-blue-600 dark:text-blue-400;
+  }
+  .bg-status-success {
+    @apply bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800;
+  }
+  .bg-status-error {
+    @apply bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800;
+  }
+  .bg-status-warning {
+    @apply bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800;
+  }
+  .bg-status-info {
+    @apply bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800;
+  }
+}
+
+/* Animations */
+@layer utilities {
+  /* Standard hover transition */
+  .transition-hover {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  /* Modal animations */
+  .animate-modal-in {
+    animation: modal-in 200ms ease-out;
+  }
+  .animate-modal-out {
+    animation: modal-out 150ms ease-in;
+  }
+
+  /* Toast slide animation */
+  .animate-toast-in {
+    animation: toast-slide-in 300ms ease-out;
+  }
+  .animate-toast-out {
+    animation: toast-slide-out 200ms ease-in;
+  }
+
+  /* Card hover effect */
+  .card-hover {
+    @apply transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  /* Interactive element feedback */
+  .interactive {
+    @apply transition-all duration-200 ease-out cursor-pointer;
+    @apply hover:bg-accent active:scale-[0.98];
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modal-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+}
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+/* Card shadows */
+@layer utilities {
+  .shadow-card {
+    @apply shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  .shadow-modal {
+    @apply shadow-xl;
+  }
+}
+
+/* Mobile card layout for tables */
+@layer utilities {
+  .mobile-card {
+    @apply block p-4 bg-card rounded-lg border shadow-sm mb-3;
+  }
+  .mobile-card-row {
+    @apply flex justify-between items-center py-2 border-b border-border last:border-b-0;
+  }
+  .mobile-card-label {
+    @apply text-xs font-medium text-muted-foreground uppercase tracking-wide;
+  }
+  .mobile-card-value {
+    @apply text-sm text-foreground;
+  }
+}
+
+/* Bottom sheet for mobile */
+@layer utilities {
+  .bottom-sheet {
+    @apply fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-2xl shadow-xl;
+    @apply transform transition-transform duration-300 ease-out;
+    max-height: 85vh;
+  }
+  .bottom-sheet-handle {
+    @apply w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto my-3;
+  }
+  .bottom-sheet-overlay {
+    @apply fixed inset-0 bg-black/40 z-40;
+  }
+}
+
+/* Responsive sidebar */
+@layer utilities {
+  .sidebar-desktop {
+    @apply hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0;
+  }
+  .sidebar-mobile {
+    @apply lg:hidden;
+  }
+}
+
+/* Hamburger menu button */
+@layer utilities {
+  .hamburger-btn {
+    @apply lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-background border shadow-sm;
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  }
+}
+
+/* Responsive spacing */
+@layer utilities {
+  .responsive-padding {
+    @apply p-4 sm:p-6 lg:p-8;
+  }
+  .responsive-gap {
+    @apply gap-3 sm:gap-4 lg:gap-6;
+  }
+}

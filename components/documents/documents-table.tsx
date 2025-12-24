@@ -368,7 +368,8 @@ export function DocumentsTable() {
                   toast("Document deleted", {
                     description: `"${doc.filename}" has been removed.`,
                     icon: <CheckCircle className="w-4 h-4 text-red-500" />,
-                    className: "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800",
+                    className:
+                      "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800",
                   });
                 }}
                 title="Delete document"
@@ -511,8 +512,9 @@ export function DocumentsTable() {
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-section-title text-gray-900 dark:text-white">
           {activeDatasetId
             ? `${
                 datasets.find((d) => d.id === activeDatasetId)?.name ??
@@ -522,22 +524,25 @@ export function DocumentsTable() {
         </h2>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-        <div className="flex items-center gap-2 flex-1 flex-wrap">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search documents by name"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 pr-3 py-2 h-9 w-[250px] text-sm border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+      {/* Filters - responsive layout */}
+      <div className="flex flex-col gap-3">
+        {/* Search bar - full width on mobile */}
+        <div className="relative w-full sm:w-auto">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search documents..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-3 py-2.5 h-11 sm:h-9 w-full sm:w-[250px] text-sm border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-hover"
+          />
+        </div>
 
+        {/* Filter row */}
+        <div className="flex flex-wrap items-center gap-2">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Filter by status" />
+            <SelectTrigger className="w-full sm:w-[140px] h-11 sm:h-9 touch-target">
+              <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
@@ -551,8 +556,8 @@ export function DocumentsTable() {
           </Select>
 
           <Select value={qualityFilter} onValueChange={setQualityFilter}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Filter by quality" />
+            <SelectTrigger className="w-full sm:w-[140px] h-11 sm:h-9 touch-target">
+              <SelectValue placeholder="Quality" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Quality</SelectItem>
@@ -563,18 +568,22 @@ export function DocumentsTable() {
           </Select>
 
           {activeFilterCount > 0 && (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <Filter className="w-3 h-3" />
-              {activeFilterCount} active
-            </Badge>
+            <div className="flex items-center gap-2 ml-auto sm:ml-0">
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Filter className="w-3 h-3" />
+                {activeFilterCount}
+              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="h-9 touch-target"
+              >
+                Clear
+              </Button>
+            </div>
           )}
         </div>
-
-        {activeFilterCount > 0 && (
-          <Button variant="outline" size="sm" onClick={clearFilters}>
-            Clear Filters
-          </Button>
-        )}
       </div>
 
       {activeFilterCount > 0 && (
@@ -583,7 +592,154 @@ export function DocumentsTable() {
         </p>
       )}
 
-      <div className="rounded-md border overflow-auto">
+      {/* Mobile Card View */}
+      <div className="block md:hidden space-y-3">
+        {table.getRowModel().rows?.length ? (
+          table.getRowModel().rows.map((row) => {
+            const doc = row.original;
+            const config = statusConfig[doc.status];
+            const StatusIcon = config.icon;
+            const isProcessing = doc.status === "processing";
+            const docDatasetIds = doc.datasetIds ?? [];
+            const selectedDatasets = datasets.filter((d) =>
+              docDatasetIds.includes(d.id)
+            );
+
+            return (
+              <div key={row.id} className="mobile-card">
+                {/* Filename & Status */}
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                    <span className="font-medium text-sm truncate">
+                      {doc.filename}
+                    </span>
+                  </div>
+                  <Badge
+                    variant={config.variant}
+                    className={`flex items-center gap-1 shrink-0 text-xs ${
+                      config.className ?? ""
+                    }`}
+                  >
+                    <StatusIcon
+                      className={`w-3 h-3 ${
+                        isProcessing ? "animate-spin" : ""
+                      }`}
+                    />
+                    {config.label}
+                  </Badge>
+                </div>
+
+                {/* Progress bar for processing */}
+                {isProcessing && (
+                  <Progress value={66} className="h-1 w-full mb-3" />
+                )}
+
+                {/* Error message */}
+                {doc.error && (
+                  <p className="text-xs text-red-600 dark:text-red-400 mb-3">
+                    {doc.error}
+                  </p>
+                )}
+
+                {/* Details grid */}
+                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                  <div>
+                    <span className="mobile-card-label">Quality</span>
+                    <div className="mt-0.5">
+                      {doc.qualityScore !== undefined ? (
+                        <QualityBadge qualityScore={doc.qualityScore} />
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="mobile-card-label">Uploaded</span>
+                    <p className="text-muted-foreground mt-0.5">
+                      {new Date(doc.uploadedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Datasets */}
+                {selectedDatasets.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {selectedDatasets.map((d) => (
+                      <span
+                        key={d.id}
+                        className="px-2 py-0.5 rounded-full text-xs text-white"
+                        style={{ background: d.color ?? "#60a5fa" }}
+                      >
+                        {d.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 px-3 touch-target"
+                    onClick={() => {
+                      setManageDocId(doc.id);
+                      setManageModalOpen(true);
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Dataset
+                  </Button>
+                  {(doc.status === "done" ||
+                    doc.status === "awaiting_review" ||
+                    doc.status === "reviewed") && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-10 px-3 touch-target"
+                      onClick={() => {
+                        setSelectedDocumentId(doc.id);
+                        setEditedData(doc.extractedData ?? null);
+                        setOriginalEditData(
+                          doc.extractedData ? { ...doc.extractedData } : null
+                        );
+                        setUnsavedChanges(doc.id, false);
+                        updateDocument(doc.id, { hasUnsavedChanges: false });
+                      }}
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      View
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 px-3 touch-target text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+                    onClick={() => {
+                      deleteDocument(doc.id);
+                      toast("Document deleted", {
+                        description: `"${doc.filename}" has been removed.`,
+                        icon: <CheckCircle className="w-4 h-4 text-red-500" />,
+                        className: "bg-status-error",
+                      });
+                    }}
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            No results found.
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block rounded-lg border overflow-auto shadow-sm">
         <Table className="table-fixed w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -612,7 +768,10 @@ export function DocumentsTable() {
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow
+                  key={row.id}
+                  className="transition-hover hover:bg-muted/50"
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
@@ -637,20 +796,20 @@ export function DocumentsTable() {
         </Table>
       </div>
 
-      {/* Pagination Controls */}
-      <div className="flex items-center justify-between px-2">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+      {/* Pagination Controls - Responsive */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1">
+        <p className="text-metadata text-center sm:text-left">
           Showing{" "}
           {table.getState().pagination.pageIndex *
             table.getState().pagination.pageSize +
             1}{" "}
-          to{" "}
+          -{" "}
           {Math.min(
             (table.getState().pagination.pageIndex + 1) *
               table.getState().pagination.pageSize,
             filteredData.length
           )}{" "}
-          of {filteredData.length} documents
+          of {filteredData.length}
         </p>
         <div className="flex items-center gap-2">
           <Button
@@ -658,21 +817,22 @@ export function DocumentsTable() {
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
+            className="h-10 sm:h-9 touch-target"
           >
             <ChevronLeft className="h-4 w-4" />
-            Previous
+            <span className="hidden sm:inline">Previous</span>
           </Button>
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
+          <span className="text-sm text-muted-foreground min-w-[80px] text-center">
+            {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
           </span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
+            className="h-10 sm:h-9 touch-target"
           >
-            Next
+            <span className="hidden sm:inline">Next</span>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -694,71 +854,92 @@ export function DocumentsTable() {
         />
       )}
 
+      {/* Review Panel - Full screen on mobile, side panel on desktop */}
       {selectedDocument && (
-        <div className="fixed right-6 top-20 w-[420px] max-h-[80vh] overflow-auto bg-white dark:bg-gray-900 border rounded shadow-lg p-4 z-50">
-          <div className="flex items-start justify-between mb-3 gap-2">
-            <div className="min-w-0 flex-1">
-              <h3 className="font-semibold break-words">
-                {selectedDocument.filename}
-              </h3>
-              <p className="text-sm text-gray-500">
-                Status: {selectedDocument.status}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Button variant="outline" size="sm" onClick={closeReview}>
-                Close
+        <>
+          {/* Mobile overlay */}
+          <div
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={closeReview}
+          />
+          <div className="fixed inset-0 md:inset-auto md:right-6 md:top-20 md:w-[420px] md:max-h-[80vh] overflow-auto bg-white dark:bg-gray-900 md:border md:rounded-lg shadow-modal p-4 sm:p-6 z-50 animate-modal-in">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-4 gap-3">
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg font-semibold break-words">
+                  {selectedDocument.filename}
+                </h3>
+                <p className="text-metadata">
+                  Status: {selectedDocument.status}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeReview}
+                className="shrink-0 touch-target"
+              >
+                <X className="h-5 w-5" />
               </Button>
             </div>
-          </div>
 
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium">Extracted Data</h4>
-            {!editedData && (
-              <p className="text-sm text-gray-500">
-                No extracted data available.
-              </p>
-            )}
-            {editedData && (
-              <FieldEditor
-                key={fieldEditorKey}
-                data={editedData}
-                onChange={(d) => {
-                  setEditedData(d);
-                  if (selectedDocumentId) {
-                    setUnsavedChanges(selectedDocumentId, true);
-                    updateDocument(selectedDocumentId, {
-                      hasUnsavedChanges: true,
-                    });
-                  }
-                }}
-              />
-            )}
+            {/* Content */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium">Extracted Data</h4>
+              {!editedData && (
+                <p className="text-metadata">No extracted data available.</p>
+              )}
+              {editedData && (
+                <FieldEditor
+                  key={fieldEditorKey}
+                  data={editedData}
+                  onChange={(d) => {
+                    setEditedData(d);
+                    if (selectedDocumentId) {
+                      setUnsavedChanges(selectedDocumentId, true);
+                      updateDocument(selectedDocumentId, {
+                        hasUnsavedChanges: true,
+                      });
+                    }
+                  }}
+                />
+              )}
 
-            <div className="flex items-center justify-between pt-3">
-              <div>
-                {JSON.stringify(editedData) !==
-                  JSON.stringify(originalEditData) && (
+              {/* Footer Actions */}
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-border">
+                <div>
+                  {JSON.stringify(editedData) !==
+                    JSON.stringify(originalEditData) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={resetToOriginal}
+                      className="w-full sm:w-auto gap-1.5 h-10 touch-target text-orange-600 border-orange-300 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-700 dark:hover:bg-orange-950"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      Reset
+                    </Button>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
                   <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={resetToOriginal}
-                    className="gap-1.5 text-orange-600 border-orange-300 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-700 dark:hover:bg-orange-950"
+                    variant="ghost"
+                    onClick={closeReview}
+                    className="flex-1 sm:flex-none h-10 touch-target"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    Reset to Original
+                    Cancel
                   </Button>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" onClick={closeReview}>
-                  Cancel
-                </Button>
-                <Button onClick={saveReview}>Save Review</Button>
+                  <Button
+                    onClick={saveReview}
+                    className="flex-1 sm:flex-none h-10 touch-target"
+                  >
+                    Save Review
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

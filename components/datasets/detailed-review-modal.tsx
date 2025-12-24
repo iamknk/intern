@@ -73,29 +73,34 @@ export default function DetailedReviewModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative z-10 w-[95vw] max-w-[1400px] max-h-[90vh] bg-white dark:bg-gray-900 rounded-lg shadow-lg flex flex-col">
+      <div className="relative z-10 w-full h-full sm:w-[95vw] sm:h-auto sm:max-w-[1400px] sm:max-h-[90vh] bg-white dark:bg-gray-900 sm:rounded-lg shadow-modal flex flex-col animate-modal-in">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
               Detailed Review
             </h3>
             {datasetName && (
-              <p className="text-sm text-gray-500">
+              <p className="text-metadata truncate">
                 {datasetName} - All extracted fields
               </p>
             )}
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="shrink-0 touch-target"
+          >
+            <X className="h-5 w-5" />
           </Button>
         </div>
 
-        {/* Table Content */}
+        {/* Table Content - Horizontal scroll on mobile */}
         <div className="flex-1 overflow-auto p-4">
-          <div className="rounded-md border">
+          <div className="rounded-md border min-w-[800px] sm:min-w-0">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -147,7 +152,11 @@ export default function DetailedReviewModal({
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 p-4 border-t">
-          <Button variant="outline" onClick={onClose}>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="h-10 touch-target"
+          >
             Close
           </Button>
         </div>
