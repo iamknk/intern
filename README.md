@@ -20,7 +20,7 @@ A Next.js application that allows users to upload lease agreement documents and 
 
 ---
 
-## What Was Built
+## [What Was Built](#-what-was-built)
 
 This project is a **document processing platform** designed for lease agreement management. The application provides:
 
@@ -44,7 +44,7 @@ This project is a **document processing platform** designed for lease agreement 
 
 ---
 
-## Getting Started
+## [Getting Started](#-getting-started)
 
 ### Prerequisites
 
@@ -84,7 +84,7 @@ This project is a **document processing platform** designed for lease agreement 
 
    Navigate to [http://localhost:3000](http://localhost:3000)
 
-## Usage Guide
+## [Usage Guide](#-usage-guide)
 
 ### 1. Upload Documents
 
@@ -118,7 +118,7 @@ This project is a **document processing platform** designed for lease agreement 
 
 ---
 
-## Screenshots
+## [Screenshots](#-screenshots)
 
 ### Home / Upload View
 
@@ -146,7 +146,7 @@ This project is a **document processing platform** designed for lease agreement 
 
 ---
 
-## Test Notes
+## [Test Notes](#-test-notes)
 
 ### Manual Testing Checklist
 
@@ -201,7 +201,7 @@ This project is a **document processing platform** designed for lease agreement 
 
 ---
 
-## What's Next
+## [What's Next](#-whats-next)
 
 ### Planned Features
 
