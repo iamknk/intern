@@ -24,7 +24,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-gray-50 dark:bg-gray-950">
-      {/* Mobile Header with Hamburger */}
       <div className="lg:hidden sticky top-0 z-40 flex items-center justify-between p-4 bg-gray-900 text-white">
         <button
           onClick={() => setSidebarOpen(true)}
@@ -34,10 +33,9 @@ export default function Home() {
           <Menu className="w-6 h-6" />
         </button>
         <h1 className="text-lg font-bold">Geni AI Agent</h1>
-        <div className="w-10" /> {/* Spacer for centering */}
+        <div className="w-10" />
       </div>
 
-      {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/50 z-50"
@@ -45,15 +43,13 @@ export default function Home() {
         />
       )}
 
-      {/* Sidebar - Desktop: persistent, Mobile: slide-in drawer */}
       <div
         className={`
           fixed inset-y-0 left-0 z-50 w-72 sm:w-80 transform transition-transform duration-300 ease-out
-          lg:relative lg:translate-x-0 lg:w-64 lg:flex-shrink-0
+          lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:w-64 lg:flex-shrink-0
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        {/* Mobile close button */}
         <button
           onClick={() => setSidebarOpen(false)}
           className="lg:hidden absolute top-4 right-4 p-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-hover z-10"
@@ -64,10 +60,8 @@ export default function Home() {
         <DatasetSidebar onNavigate={() => setSidebarOpen(false)} />
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <div className="responsive-padding max-w-7xl mx-auto space-y-4 sm:space-y-6">
-          {/* Header - only shows when viewing All Documents */}
+      <main className="flex-1 min-h-fit min-w-0 overflow-hidden">
+        <div className="responsive-padding pt-4 sm:p-6 lg:pt-8 max-w-7xl mx-auto space-y-4 sm:space-y-6 xl:max-w-none xl:px-8 2xl:px-12">
           {!activeDatasetId && !isLoading && (
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="space-y-1">
@@ -75,15 +69,13 @@ export default function Home() {
                   Geni AI Agent
                 </h1>
                 <p className="text-metadata">
-                  Upload your PDF documents lease agreements to get excel sheets
-                  with the data
+                  Upload your lease agreements to get excel sheets with the data
                 </p>
               </div>
               {hasDocuments && <UploadButton />}
             </div>
           )}
 
-          {/* Loading state - only for main content, not datasets */}
           {isLoading && !activeDatasetId ? (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-card p-4 sm:p-6 lg:p-8">
               <div className="flex flex-col items-center justify-center py-12">
@@ -99,14 +91,12 @@ export default function Home() {
             </div>
           ) : (
             <div className="space-y-4 sm:space-y-6">
-              {/* Documents Table - only shows when viewing All Documents */}
               {!activeDatasetId && (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-card p-4 sm:p-6">
                   <DocumentsTable />
                 </div>
               )}
 
-              {/* Dataset Extracted Data Table - only shows when a dataset is selected */}
               {activeDatasetId && (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-card p-4 sm:p-6">
                   <DatasetDataTable />

@@ -318,7 +318,7 @@
 /* Responsive spacing */
 @layer utilities {
   .responsive-padding {
-    @apply p-4 sm:p-6 lg:p-8;
+    @apply p-4 sm:px-4 lg:p-8;
   }
   .responsive-gap {
     @apply gap-3 sm:gap-4 lg:gap-6;

@@ -14,14 +14,6 @@ interface DocumentStore {
   appendDocumentsToDataset: (datasetId: string, documentIds: string[]) => void;
   addDocumentToDataset: (datasetId: string, documentId: string) => void;
   removeDocumentFromDataset: (datasetId: string, documentId: string) => void;
-  detectDuplicatesForDataset: (
-    datasetId: string,
-    candidateDocumentIds?: string[]
-  ) => string[];
-  moveDocumentToDataset: (
-    documentId: string,
-    datasetId?: string | null
-  ) => void;
   updateDocument: (id: string, updates: Partial<Document>) => void;
   updateDocumentStatus: (
     id: string,
@@ -243,86 +235,6 @@ export const useDocumentStore = create<DocumentStore>()(
               : doc
           ),
         }));
-      },
-
-      detectDuplicatesForDataset: (
-        datasetId: string,
-        candidateDocumentIds?: string[]
-      ) => {
-        // simple filename-based duplicate detection
-        // returns array of candidate ids that already exist in the target dataset
-        return ((): string[] => {
-          // build a set of filenames in dataset
-          const dataset = (useDocumentStore as any)
-            .getState?.()
-            ?.datasets?.find((d: Dataset) => d.id === datasetId);
-          const existingIds = dataset?.documentIds ?? [];
-          const existingFiles = new Set<string>();
-          const stateDocs =
-            (useDocumentStore as any).getState?.()?.documents ?? [];
-          existingIds.forEach((id: string) => {
-            const doc = stateDocs.find((d: Document) => d.id === id);
-            if (doc) existingFiles.add(doc.filename.toLowerCase());
-          });
-
-          const candidates = candidateDocumentIds ?? [];
-          return candidates.filter((cid) => {
-            const cdoc = stateDocs.find((d: Document) => d.id === cid);
-            if (!cdoc) return false;
-            return existingFiles.has(cdoc.filename.toLowerCase());
-          });
-        })();
-      },
-
-      // For backwards compatibility: if datasetId provided, add it to the document's datasetIds;
-      // if undefined/null, remove the document from all datasets (make uncategorized).
-      moveDocumentToDataset: (
-        documentId: string,
-        datasetId?: string | null
-      ) => {
-        set((state) => {
-          const doc = state.documents.find((d) => d.id === documentId);
-          if (!doc) return {};
-
-          let datasets = state.datasets.map((ds) => ({ ...ds }));
-
-          if (datasetId) {
-            // add membership
-            datasets = datasets.map((ds) =>
-              ds.id === datasetId
-                ? {
-                    ...ds,
-                    documentIds: Array.from(
-                      new Set([...(ds.documentIds ?? []), documentId])
-                    ),
-                  }
-                : ds
-            );
-            const documents = state.documents.map((d) =>
-              d.id === documentId
-                ? {
-                    ...d,
-                    datasetIds: Array.from(
-                      new Set([...(d.datasetIds ?? []), datasetId])
-                    ),
-                  }
-                : d
-            );
-            return { datasets, documents };
-          } else {
-            // remove from all datasets
-            datasets = datasets.map((ds) => ({
-              ...ds,
-              documentIds: (ds.documentIds ?? []).filter(
-                (id) => id !== documentId
-              ),
-            }));
-            const documents = state.documents.map((d) =>
-              d.id === documentId ? { ...d, datasetIds: [] } : d
-            );
-            return { datasets, documents };
-          }
-        });
       },
 
       updateDocumentStatus: (

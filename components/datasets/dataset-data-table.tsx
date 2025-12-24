@@ -396,8 +396,8 @@ export function DatasetDataTable() {
       </div>
 
       {/* Table with horizontal scroll on mobile */}
-      <div className="rounded-lg border shadow-sm overflow-x-auto">
-        <Table>
+      <div className="rounded-lg border shadow-sm overflow-x-auto max-w-full">
+        <Table className="min-w-[900px]">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>

@@ -50,17 +50,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-} from "@/components/ui/dropdown-menu";
 import FieldEditor from "./field-editor";
 import { QualityBadge } from "./quality-badge";
-import CreateDatasetModal from "@/components/datasets/create-dataset-modal";
 import ManageDatasetModal from "@/components/datasets/manage-dataset-modal";
-import type { Dataset } from "@/lib/types";
 import type { Document, DocumentStatus } from "@/lib/types";
 
 const statusConfig: Record<
@@ -128,13 +120,7 @@ export function DocumentsTable() {
   const [editedData, setEditedData] = useState<any>(null);
   const [originalEditData, setOriginalEditData] = useState<any>(null);
   const [fieldEditorKey, setFieldEditorKey] = useState(0);
-  const [pillDialogOpen, setPillDialogOpen] = useState(false);
-  const [selectedPill, setSelectedPill] = useState<string | undefined>(
-    undefined
-  );
   const datasets = useDocumentStore((s) => s.datasets);
-  const selectDataset = useDocumentStore((s) => s.selectDataset);
-  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [manageModalOpen, setManageModalOpen] = useState(false);
   const [manageDocId, setManageDocId] = useState<string | null>(null);
 
@@ -200,7 +186,6 @@ export function DocumentsTable() {
         },
         cell: ({ row }) => {
           const doc = row.original;
-          const config = statusConfig[doc.status];
           const isProcessing = doc.status === "processing";
 
           return (
@@ -386,15 +371,6 @@ export function DocumentsTable() {
 
   const selectedDocument =
     documents.find((d) => d.id === selectedDocumentId) ?? null;
-
-  const handleFieldChange = (field: string, value: any) => {
-    setEditedData((prev: any) => ({ ...(prev || {}), [field]: value }));
-    if (selectedDocumentId) {
-      setUnsavedChanges(selectedDocumentId, true);
-      // Also mark the document as having unsaved changes in the store
-      updateDocument(selectedDocumentId, { hasUnsavedChanges: true });
-    }
-  };
 
   const saveReview = () => {
     if (!selectedDocument || !editedData) return;
@@ -664,7 +640,7 @@ export function DocumentsTable() {
 
                 {/* Datasets */}
                 {selectedDatasets.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-3">
+                  <div className="flex flex-wrap gap-1 mb-1">
                     {selectedDatasets.map((d) => (
                       <span
                         key={d.id}
@@ -677,8 +653,8 @@ export function DocumentsTable() {
                   </div>
                 )}
 
-                {/* Actions */}
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+                {/* Actions - inline with card content */}
+                <div className="flex items-center justify-end border-b-2 mb-3">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -738,9 +714,9 @@ export function DocumentsTable() {
         )}
       </div>
 
-      {/* Desktop Table View */}
-      <div className="hidden md:block rounded-lg border overflow-auto shadow-sm">
-        <Table className="table-fixed w-full">
+      {/* Desktop Table View - horizontally scrollable */}
+      <div className="hidden md:block rounded-lg border shadow-sm overflow-x-auto max-w-full">
+        <Table className="min-w-[800px] w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -751,6 +727,7 @@ export function DocumentsTable() {
                   return (
                     <TableHead
                       key={header.id}
+                      className="whitespace-nowrap"
                       style={width ? { width } : undefined}
                     >
                       {header.isPlaceholder
@@ -773,7 +750,7 @@ export function DocumentsTable() {
                   className="transition-hover hover:bg-muted/50"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="whitespace-nowrap">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -837,11 +814,6 @@ export function DocumentsTable() {
           </Button>
         </div>
       </div>
-
-      <CreateDatasetModal
-        open={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-      />
 
       {manageDocId && (
         <ManageDatasetModal

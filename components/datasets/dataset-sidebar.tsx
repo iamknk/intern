@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import CreateDatasetModal from "./create-dataset-modal";
 import { useDocumentStore } from "@/lib/store/document-store";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Search } from "lucide-react";
 
 interface DatasetSidebarProps {
   onNavigate?: () => void;
@@ -16,9 +16,18 @@ export default function DatasetSidebar({ onNavigate }: DatasetSidebarProps) {
   const selectDataset = useDocumentStore((s) => s.selectDataset);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
   const getDatasetDocCount = (datasetId: string) => {
     return documents.filter((d) => d.datasetIds?.includes(datasetId)).length;
   };
+
+  const filteredDatasets = useMemo(() => {
+    if (!searchQuery.trim()) return datasets;
+    return datasets.filter((d) =>
+      d.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [datasets, searchQuery]);
 
   const handleSelectDataset = (datasetId: string | null) => {
     selectDataset(datasetId);
@@ -67,6 +76,20 @@ export default function DatasetSidebar({ onNavigate }: DatasetSidebarProps) {
             </button>
           </div>
 
+          {/* Search Input */}
+          <div className="px-2 pb-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search datasets..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 h-9 text-sm border border-gray-700 rounded-lg bg-gray-800 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-hover"
+              />
+            </div>
+          </div>
+
           <div
             className="flex-1 overflow-y-auto px-2 pb-4 space-y-1"
             style={{
@@ -79,8 +102,12 @@ export default function DatasetSidebar({ onNavigate }: DatasetSidebarProps) {
               <p className="text-xs text-gray-500 px-3 py-2">
                 No datasets yet. Create one above.
               </p>
+            ) : filteredDatasets.length === 0 ? (
+              <p className="text-xs text-gray-500 px-3 py-2">
+                No datasets match your search.
+              </p>
             ) : (
-              datasets.map((d) => {
+              filteredDatasets.map((d) => {
                 const docCount = getDatasetDocCount(d.id);
                 const isActive = d.id === activeDatasetId;
                 return (
