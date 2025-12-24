@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useDocumentStore } from "@/lib/store/document-store";
 import { X, Plus, Check, Search } from "lucide-react";
@@ -32,14 +33,36 @@ export default function ManageDatasetModal({
   const document = documents.find((d) => d.id === documentId);
   const docDatasetIds = document?.datasetIds ?? [];
 
+  // Track initial dataset IDs to detect changes
+  const initialDatasetIdsRef = useRef<string[]>([]);
+  const hasChangedRef = useRef(false);
+
+  useEffect(() => {
+    if (open) {
+      initialDatasetIdsRef.current = [...docDatasetIds];
+      hasChangedRef.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, documentId]);
+
   if (!open) return null;
 
   const handleToggleDataset = (datasetId: string, isSelected: boolean) => {
+    hasChangedRef.current = true;
     if (isSelected) {
       removeDocumentFromDataset(datasetId, documentId);
     } else {
       appendDocumentsToDataset(datasetId, [documentId]);
     }
+  };
+
+  const handleDone = () => {
+    if (hasChangedRef.current) {
+      toast.success("Datasets updated", {
+        description: `Dataset assignments for "${document?.filename}" have been saved.`,
+      });
+    }
+    onClose();
   };
 
   return (
@@ -141,7 +164,7 @@ export default function ManageDatasetModal({
               <Plus className="w-4 h-4 mr-2" />
               New Dataset
             </Button>
-            <Button onClick={onClose} className="h-11 sm:h-10 touch-target">
+            <Button onClick={handleDone} className="h-11 sm:h-10 touch-target">
               Done
             </Button>
           </div>
