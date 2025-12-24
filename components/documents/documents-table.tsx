@@ -527,34 +527,6 @@ export function DocumentsTable() {
           </TableBody>
         </Table>
       </div>
-      {/* Bottom sticky footer with dataset badges */}
-      <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t p-3 mt-3">
-        <div className="flex items-center gap-2 overflow-auto">
-          {datasets.map((d: Dataset) => (
-            <button
-              key={d.id}
-              onClick={() => selectDataset(d.id)}
-              className="px-3 py-1 rounded-full flex items-center gap-2"
-              style={{ background: d.color ?? "#60a5fa" }}
-            >
-              <span className="text-sm font-medium text-white truncate max-w-[160px]">
-                {d.name}
-              </span>
-              <span className="text-xs text-white/90">
-                {d.documentIds?.length ?? 0}
-              </span>
-            </button>
-          ))}
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCreateModalOpen(true)}
-          >
-            + New Dataset
-          </Button>
-        </div>
-      </div>
 
       <CreateDatasetModal
         open={createModalOpen}

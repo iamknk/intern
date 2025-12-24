@@ -7,6 +7,8 @@ interface DocumentStore {
   datasets: Dataset[];
   activeDatasetId?: string | null;
   addDocument: (file: File) => string;
+  addDocumentWithDataset: (file: File, datasetId: string | null) => string;
+  addDocumentWithDatasets: (file: File, datasetIds: string[]) => string;
   createDataset: (name: string, description?: string, color?: string) => string;
   selectDataset: (id: string | null) => void;
   appendDocumentsToDataset: (datasetId: string, documentIds: string[]) => void;
@@ -16,7 +18,10 @@ interface DocumentStore {
     datasetId: string,
     candidateDocumentIds?: string[]
   ) => string[];
-  moveDocumentToDataset: (documentId: string, datasetId?: string | null) => void;
+  moveDocumentToDataset: (
+    documentId: string,
+    datasetId?: string | null
+  ) => void;
   updateDocument: (id: string, updates: Partial<Document>) => void;
   updateDocumentStatus: (
     id: string,
@@ -45,7 +50,7 @@ export const useDocumentStore = create<DocumentStore>()(
           filename: file.name,
           status: "queued",
           uploadedAt: new Date(),
-              datasetIds: [],
+          datasetIds: [],
         };
 
         set((state) => {
@@ -53,7 +58,9 @@ export const useDocumentStore = create<DocumentStore>()(
           const docs = [...state.documents, newDocument];
           // if there is an active dataset, attach it (multi-membership)
           if (state.activeDatasetId) {
-            const dsIndex = state.datasets.findIndex((d) => d.id === state.activeDatasetId);
+            const dsIndex = state.datasets.findIndex(
+              (d) => d.id === state.activeDatasetId
+            );
             if (dsIndex !== -1) {
               const ds = state.datasets[dsIndex];
               const updatedDs = {
@@ -64,10 +71,75 @@ export const useDocumentStore = create<DocumentStore>()(
               datasets[dsIndex] = updatedDs;
               // set datasetIds on the document
               const updatedDocs = docs.map((d) =>
-                d.id === newDocument.id ? { ...d, datasetIds: [state.activeDatasetId!] } : d
+                d.id === newDocument.id
+                  ? { ...d, datasetIds: [state.activeDatasetId!] }
+                  : d
               );
               return { documents: updatedDocs, datasets };
             }
+          }
+
+          return { documents: docs };
+        });
+
+        return newDocument.id;
+      },
+
+      addDocumentWithDataset: (file: File, datasetId: string | null) => {
+        const newDocument: Document = {
+          id: crypto.randomUUID(),
+          filename: file.name,
+          status: "queued",
+          uploadedAt: new Date(),
+          datasetIds: datasetId ? [datasetId] : [],
+        };
+
+        set((state) => {
+          const docs = [...state.documents, newDocument];
+
+          if (datasetId) {
+            const dsIndex = state.datasets.findIndex((d) => d.id === datasetId);
+            if (dsIndex !== -1) {
+              const ds = state.datasets[dsIndex];
+              const updatedDs = {
+                ...ds,
+                documentIds: [...(ds.documentIds ?? []), newDocument.id],
+              };
+              const datasets = [...state.datasets];
+              datasets[dsIndex] = updatedDs;
+              return { documents: docs, datasets };
+            }
+          }
+
+          return { documents: docs };
+        });
+
+        return newDocument.id;
+      },
+
+      addDocumentWithDatasets: (file: File, datasetIds: string[]) => {
+        const newDocument: Document = {
+          id: crypto.randomUUID(),
+          filename: file.name,
+          status: "queued",
+          uploadedAt: new Date(),
+          datasetIds: datasetIds,
+        };
+
+        set((state) => {
+          const docs = [...state.documents, newDocument];
+
+          if (datasetIds.length > 0) {
+            const datasets = state.datasets.map((ds) => {
+              if (datasetIds.includes(ds.id)) {
+                return {
+                  ...ds,
+                  documentIds: [...(ds.documentIds ?? []), newDocument.id],
+                };
+              }
+              return ds;
+            });
+            return { documents: docs, datasets };
           }
 
           return { documents: docs };
@@ -86,7 +158,10 @@ export const useDocumentStore = create<DocumentStore>()(
           documentIds: [],
           color,
         };
-        set((state) => ({ datasets: [...state.datasets, newDataset], activeDatasetId: id }));
+        set((state) => ({
+          datasets: [...state.datasets, newDataset],
+          activeDatasetId: id,
+        }));
         return id;
       },
 
@@ -98,12 +173,22 @@ export const useDocumentStore = create<DocumentStore>()(
         set((state) => ({
           datasets: state.datasets.map((ds) =>
             ds.id === datasetId
-              ? { ...ds, documentIds: Array.from(new Set([...(ds.documentIds ?? []), ...documentIds])) }
+              ? {
+                  ...ds,
+                  documentIds: Array.from(
+                    new Set([...(ds.documentIds ?? []), ...documentIds])
+                  ),
+                }
               : ds
           ),
           documents: state.documents.map((doc) =>
             documentIds.includes(doc.id)
-              ? { ...doc, datasetIds: Array.from(new Set([...(doc.datasetIds ?? []), datasetId])) }
+              ? {
+                  ...doc,
+                  datasetIds: Array.from(
+                    new Set([...(doc.datasetIds ?? []), datasetId])
+                  ),
+                }
               : doc
           ),
         }));
@@ -114,12 +199,22 @@ export const useDocumentStore = create<DocumentStore>()(
         set((state) => ({
           datasets: state.datasets.map((ds) =>
             ds.id === datasetId
-              ? { ...ds, documentIds: Array.from(new Set([...(ds.documentIds ?? []), documentId])) }
+              ? {
+                  ...ds,
+                  documentIds: Array.from(
+                    new Set([...(ds.documentIds ?? []), documentId])
+                  ),
+                }
               : ds
           ),
           documents: state.documents.map((doc) =>
             doc.id === documentId
-              ? { ...doc, datasetIds: Array.from(new Set([...(doc.datasetIds ?? []), datasetId])) }
+              ? {
+                  ...doc,
+                  datasetIds: Array.from(
+                    new Set([...(doc.datasetIds ?? []), datasetId])
+                  ),
+                }
               : doc
           ),
         }));
@@ -130,26 +225,42 @@ export const useDocumentStore = create<DocumentStore>()(
         set((state) => ({
           datasets: state.datasets.map((ds) =>
             ds.id === datasetId
-              ? { ...ds, documentIds: (ds.documentIds ?? []).filter((id) => id !== documentId) }
+              ? {
+                  ...ds,
+                  documentIds: (ds.documentIds ?? []).filter(
+                    (id) => id !== documentId
+                  ),
+                }
               : ds
           ),
           documents: state.documents.map((doc) =>
             doc.id === documentId
-              ? { ...doc, datasetIds: (doc.datasetIds ?? []).filter((id) => id !== datasetId) }
+              ? {
+                  ...doc,
+                  datasetIds: (doc.datasetIds ?? []).filter(
+                    (id) => id !== datasetId
+                  ),
+                }
               : doc
           ),
         }));
       },
 
-      detectDuplicatesForDataset: (datasetId: string, candidateDocumentIds?: string[]) => {
+      detectDuplicatesForDataset: (
+        datasetId: string,
+        candidateDocumentIds?: string[]
+      ) => {
         // simple filename-based duplicate detection
         // returns array of candidate ids that already exist in the target dataset
         return ((): string[] => {
           // build a set of filenames in dataset
-          const dataset = (useDocumentStore as any).getState?.()?.datasets?.find((d: Dataset) => d.id === datasetId);
+          const dataset = (useDocumentStore as any)
+            .getState?.()
+            ?.datasets?.find((d: Dataset) => d.id === datasetId);
           const existingIds = dataset?.documentIds ?? [];
           const existingFiles = new Set<string>();
-          const stateDocs = (useDocumentStore as any).getState?.()?.documents ?? [];
+          const stateDocs =
+            (useDocumentStore as any).getState?.()?.documents ?? [];
           existingIds.forEach((id: string) => {
             const doc = stateDocs.find((d: Document) => d.id === id);
             if (doc) existingFiles.add(doc.filename.toLowerCase());
@@ -166,7 +277,10 @@ export const useDocumentStore = create<DocumentStore>()(
 
       // For backwards compatibility: if datasetId provided, add it to the document's datasetIds;
       // if undefined/null, remove the document from all datasets (make uncategorized).
-      moveDocumentToDataset: (documentId: string, datasetId?: string | null) => {
+      moveDocumentToDataset: (
+        documentId: string,
+        datasetId?: string | null
+      ) => {
         set((state) => {
           const doc = state.documents.find((d) => d.id === documentId);
           if (!doc) return {};
@@ -177,19 +291,36 @@ export const useDocumentStore = create<DocumentStore>()(
             // add membership
             datasets = datasets.map((ds) =>
               ds.id === datasetId
-                ? { ...ds, documentIds: Array.from(new Set([...(ds.documentIds ?? []), documentId])) }
+                ? {
+                    ...ds,
+                    documentIds: Array.from(
+                      new Set([...(ds.documentIds ?? []), documentId])
+                    ),
+                  }
                 : ds
             );
             const documents = state.documents.map((d) =>
               d.id === documentId
-                ? { ...d, datasetIds: Array.from(new Set([...(d.datasetIds ?? []), datasetId])) }
+                ? {
+                    ...d,
+                    datasetIds: Array.from(
+                      new Set([...(d.datasetIds ?? []), datasetId])
+                    ),
+                  }
                 : d
             );
             return { datasets, documents };
           } else {
             // remove from all datasets
-            datasets = datasets.map((ds) => ({ ...ds, documentIds: (ds.documentIds ?? []).filter((id) => id !== documentId) }));
-            const documents = state.documents.map((d) => (d.id === documentId ? { ...d, datasetIds: [] } : d));
+            datasets = datasets.map((ds) => ({
+              ...ds,
+              documentIds: (ds.documentIds ?? []).filter(
+                (id) => id !== documentId
+              ),
+            }));
+            const documents = state.documents.map((d) =>
+              d.id === documentId ? { ...d, datasetIds: [] } : d
+            );
             return { datasets, documents };
           }
         });
@@ -255,7 +386,10 @@ export const useDocumentStore = create<DocumentStore>()(
       deserialize: (str: string) => {
         try {
           const parsed = JSON.parse(str);
-          if (parsed?.state?.documents && Array.isArray(parsed.state.documents)) {
+          if (
+            parsed?.state?.documents &&
+            Array.isArray(parsed.state.documents)
+          ) {
             parsed.state.documents = parsed.state.documents.map((d: any) => ({
               ...d,
               // migrate legacy datasetId -> datasetIds
@@ -264,10 +398,7 @@ export const useDocumentStore = create<DocumentStore>()(
               processedAt: d.processedAt ? new Date(d.processedAt) : undefined,
             }));
           }
-          if (
-            parsed?.state?.datasets &&
-            Array.isArray(parsed.state.datasets)
-          ) {
+          if (parsed?.state?.datasets && Array.isArray(parsed.state.datasets)) {
             parsed.state.datasets = parsed.state.datasets.map((ds: any) => ({
               ...ds,
               createdAt: ds.createdAt ? new Date(ds.createdAt) : undefined,
