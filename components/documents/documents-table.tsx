@@ -30,6 +30,7 @@ import {
   ChevronLeft,
   ChevronRight,
   RotateCcw,
+  Download,
 } from "lucide-react";
 import { useDocumentStore } from "@/lib/store/document-store";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +51,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import FieldEditor from "./field-editor";
 import { QualityBadge } from "./quality-badge";
 import ManageDatasetModal from "@/components/datasets/manage-dataset-modal";
@@ -113,6 +120,7 @@ export function DocumentsTable() {
   });
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [qualityFilter, setQualityFilter] = useState<string>("all");
+  const [datasetFilter, setDatasetFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
     null
@@ -439,9 +447,16 @@ export function DocumentsTable() {
           if (qualityFilter === "low" && doc.qualityScore >= 70) return false;
         }
 
+        // Dataset assignment filter
+        if (datasetFilter !== "all") {
+          const hasDataset = doc.datasetIds && doc.datasetIds.length > 0;
+          if (datasetFilter === "assigned" && !hasDataset) return false;
+          if (datasetFilter === "unassigned" && hasDataset) return false;
+        }
+
         return true;
       }),
-    [documents, statusFilter, qualityFilter, searchQuery]
+    [documents, statusFilter, qualityFilter, datasetFilter, searchQuery]
   );
 
   const table = useReactTable({
@@ -464,13 +479,133 @@ export function DocumentsTable() {
   const clearFilters = () => {
     setStatusFilter("all");
     setQualityFilter("all");
+    setDatasetFilter("all");
     setSearchQuery("");
   };
 
   const activeFilterCount =
     (statusFilter !== "all" ? 1 : 0) +
     (qualityFilter !== "all" ? 1 : 0) +
+    (datasetFilter !== "all" ? 1 : 0) +
     (searchQuery ? 1 : 0);
+
+  // Helper to get dataset names for a document
+  const getDatasetNames = (doc: Document): string => {
+    if (!doc.datasetIds || doc.datasetIds.length === 0) return "";
+    return doc.datasetIds
+      .map((id) => datasets.find((ds) => ds.id === id)?.name ?? "")
+      .filter(Boolean)
+      .join(", ");
+  };
+
+  // Export documents with extracted data
+  const documentsWithData = useMemo(() => {
+    return documents.filter((doc) => doc.extractedData);
+  }, [documents]);
+
+  const exportToCSV = () => {
+    if (documentsWithData.length === 0) {
+      toast.error("No data to export", {
+        description: "There are no documents with extracted data to export.",
+      });
+      return;
+    }
+
+    const headers = [
+      "Document",
+      "Datasets",
+      "Name",
+      "Surname",
+      "Street",
+      "House Number",
+      "Zip Code",
+      "City",
+      "Warm Rent",
+      "Cold Rent",
+      "Deposit",
+      "Contract Term (months)",
+      "Notice Period (months)",
+      "Date",
+      "Rent Increase Type",
+      "Active",
+      "Landlord",
+      "Reviewed",
+    ];
+
+    const csvContent = [
+      headers.join(","),
+      ...documentsWithData.map((doc) => {
+        const data = doc.extractedData!;
+        return [
+          `"${doc.filename}"`,
+          `"${getDatasetNames(doc)}"`,
+          `"${data.name || ""}"`,
+          `"${data.surname || ""}"`,
+          `"${data.address_street || ""}"`,
+          `"${data.address_house_number || ""}"`,
+          `"${data.address_zip_code || ""}"`,
+          `"${data.address_city || ""}"`,
+          data.warm_rent || "",
+          data.cold_rent || "",
+          data.deposit || "",
+          data.contract_term_months || "",
+          data.notice_period_months || "",
+          `"${data.date || ""}"`,
+          `"${data.rent_increase_type || ""}"`,
+          data.is_active !== undefined ? (data.is_active ? "Yes" : "No") : "",
+          `"${data.landlord_entity || ""}"`,
+          doc.status === "reviewed" ? "Yes" : "No",
+        ].join(",");
+      }),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "all_documents_data.csv";
+    link.click();
+  };
+
+  const exportToXLSX = async () => {
+    if (documentsWithData.length === 0) {
+      toast.error("No data to export", {
+        description: "There are no documents with extracted data to export.",
+      });
+      return;
+    }
+
+    const XLSX = await import("xlsx");
+
+    const worksheetData = documentsWithData.map((doc) => {
+      const data = doc.extractedData!;
+      return {
+        Document: doc.filename,
+        Datasets: getDatasetNames(doc),
+        Name: data.name || "",
+        Surname: data.surname || "",
+        Street: data.address_street || "",
+        "House Number": data.address_house_number || "",
+        "Zip Code": data.address_zip_code || "",
+        City: data.address_city || "",
+        "Warm Rent": data.warm_rent || "",
+        "Cold Rent": data.cold_rent || "",
+        Deposit: data.deposit || "",
+        "Contract Term (months)": data.contract_term_months || "",
+        "Notice Period (months)": data.notice_period_months || "",
+        Date: data.date || "",
+        "Rent Increase Type": data.rent_increase_type || "",
+        Active:
+          data.is_active !== undefined ? (data.is_active ? "Yes" : "No") : "",
+        Landlord: data.landlord_entity || "",
+        Reviewed: doc.status === "reviewed" ? "Yes" : "No",
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "All Documents");
+    XLSX.writeFile(workbook, "all_documents_data.xlsx");
+  };
 
   if (documents.length === 0) {
     return (
@@ -498,6 +633,28 @@ export function DocumentsTable() {
               } (${documents.length})`
             : `Documents (${documents.length})`}
         </h2>
+        {!activeDatasetId && documentsWithData.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-2 touch-target"
+              >
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:inline">Export All</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={exportToCSV} className="touch-target">
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportToXLSX} className="touch-target">
+                Export as Excel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* Filters - responsive layout */}
@@ -542,6 +699,19 @@ export function DocumentsTable() {
               <SelectItem value="low">Low (&lt;70%)</SelectItem>
             </SelectContent>
           </Select>
+
+          {!activeDatasetId && (
+            <Select value={datasetFilter} onValueChange={setDatasetFilter}>
+              <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-9 touch-target">
+                <SelectValue placeholder="Dataset" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Datasets</SelectItem>
+                <SelectItem value="assigned">Assigned</SelectItem>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
 
           {activeFilterCount > 0 && (
             <div className="flex items-center gap-2 ml-auto sm:ml-0">

@@ -7,12 +7,10 @@ interface DocumentStore {
   datasets: Dataset[];
   activeDatasetId?: string | null;
   addDocument: (file: File) => string;
-  addDocumentWithDataset: (file: File, datasetId: string | null) => string;
   addDocumentWithDatasets: (file: File, datasetIds: string[]) => string;
   createDataset: (name: string, description?: string, color?: string) => string;
   selectDataset: (id: string | null) => void;
   appendDocumentsToDataset: (datasetId: string, documentIds: string[]) => void;
-  addDocumentToDataset: (datasetId: string, documentId: string) => void;
   removeDocumentFromDataset: (datasetId: string, documentId: string) => void;
   updateDocument: (id: string, updates: Partial<Document>) => void;
   updateDocumentStatus: (
@@ -68,38 +66,6 @@ export const useDocumentStore = create<DocumentStore>()(
                   : d
               );
               return { documents: updatedDocs, datasets };
-            }
-          }
-
-          return { documents: docs };
-        });
-
-        return newDocument.id;
-      },
-
-      addDocumentWithDataset: (file: File, datasetId: string | null) => {
-        const newDocument: Document = {
-          id: crypto.randomUUID(),
-          filename: file.name,
-          status: "queued",
-          uploadedAt: new Date(),
-          datasetIds: datasetId ? [datasetId] : [],
-        };
-
-        set((state) => {
-          const docs = [...state.documents, newDocument];
-
-          if (datasetId) {
-            const dsIndex = state.datasets.findIndex((d) => d.id === datasetId);
-            if (dsIndex !== -1) {
-              const ds = state.datasets[dsIndex];
-              const updatedDs = {
-                ...ds,
-                documentIds: [...(ds.documentIds ?? []), newDocument.id],
-              };
-              const datasets = [...state.datasets];
-              datasets[dsIndex] = updatedDs;
-              return { documents: docs, datasets };
             }
           }
 
@@ -174,32 +140,6 @@ export const useDocumentStore = create<DocumentStore>()(
           ),
           documents: state.documents.map((doc) =>
             documentIds.includes(doc.id)
-              ? {
-                  ...doc,
-                  datasetIds: Array.from(
-                    new Set([...(doc.datasetIds ?? []), datasetId])
-                  ),
-                }
-              : doc
-          ),
-        }));
-      },
-
-      // add a single document into a dataset (tag)
-      addDocumentToDataset: (datasetId: string, documentId: string) => {
-        set((state) => ({
-          datasets: state.datasets.map((ds) =>
-            ds.id === datasetId
-              ? {
-                  ...ds,
-                  documentIds: Array.from(
-                    new Set([...(ds.documentIds ?? []), documentId])
-                  ),
-                }
-              : ds
-          ),
-          documents: state.documents.map((doc) =>
-            doc.id === documentId
               ? {
                   ...doc,
                   datasetIds: Array.from(
@@ -292,33 +232,56 @@ export const useDocumentStore = create<DocumentStore>()(
       },
     }),
     {
-      name: "document-store", // localStorage key
-      // Rehydrate dates because JSON.stringify/parse turns Dates into strings
-      deserialize: (str: string) => {
-        try {
-          const parsed = JSON.parse(str);
-          if (
-            parsed?.state?.documents &&
-            Array.isArray(parsed.state.documents)
-          ) {
-            parsed.state.documents = parsed.state.documents.map((d: any) => ({
-              ...d,
-              // migrate legacy datasetId -> datasetIds
-              datasetIds: d.datasetIds ?? (d.datasetId ? [d.datasetId] : []),
-              uploadedAt: d.uploadedAt ? new Date(d.uploadedAt) : undefined,
-              processedAt: d.processedAt ? new Date(d.processedAt) : undefined,
-            }));
+      name: "document-store",
+      storage: {
+        getItem: (name: string) => {
+          const str = localStorage.getItem(name);
+          if (!str) return null;
+          try {
+            const parsed = JSON.parse(str);
+            if (
+              parsed?.state?.documents &&
+              Array.isArray(parsed.state.documents)
+            ) {
+              parsed.state.documents = parsed.state.documents.map(
+                (d: Record<string, unknown>) => ({
+                  ...d,
+                  datasetIds:
+                    (d.datasetIds as string[]) ??
+                    (d.datasetId ? [d.datasetId as string] : []),
+                  uploadedAt: d.uploadedAt
+                    ? new Date(d.uploadedAt as string)
+                    : undefined,
+                  processedAt: d.processedAt
+                    ? new Date(d.processedAt as string)
+                    : undefined,
+                })
+              );
+            }
+            if (
+              parsed?.state?.datasets &&
+              Array.isArray(parsed.state.datasets)
+            ) {
+              parsed.state.datasets = parsed.state.datasets.map(
+                (ds: Record<string, unknown>) => ({
+                  ...ds,
+                  createdAt: ds.createdAt
+                    ? new Date(ds.createdAt as string)
+                    : undefined,
+                })
+              );
+            }
+            return parsed;
+          } catch {
+            return JSON.parse(str);
           }
-          if (parsed?.state?.datasets && Array.isArray(parsed.state.datasets)) {
-            parsed.state.datasets = parsed.state.datasets.map((ds: any) => ({
-              ...ds,
-              createdAt: ds.createdAt ? new Date(ds.createdAt) : undefined,
-            }));
-          }
-          return parsed;
-        } catch (e) {
-          return JSON.parse(str);
-        }
+        },
+        setItem: (name: string, value: unknown) => {
+          localStorage.setItem(name, JSON.stringify(value));
+        },
+        removeItem: (name: string) => {
+          localStorage.removeItem(name);
+        },
       },
     }
   )

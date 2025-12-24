@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import CreateDatasetModal from "./create-dataset-modal";
 import { useDocumentStore } from "@/lib/store/document-store";
 import { FileText, Plus, Search } from "lucide-react";

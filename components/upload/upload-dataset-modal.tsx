@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useDocumentStore } from "@/lib/store/document-store";
 import {
@@ -44,7 +44,7 @@ export default function UploadDatasetModal({
   );
 
   // Update when files prop changes
-  React.useEffect(() => {
+  useEffect(() => {
     setFileAssignments(files.map((file) => ({ file, datasetIds: [] })));
     setCurrentIndex(0);
     setSearchQuery("");

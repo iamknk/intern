@@ -33,8 +33,6 @@ export interface Dataset {
   createdAt: Date;
   description?: string;
   documentIds?: string[];
-  // optional category pills/tags for UI grouping
-  categories?: string[];
   color?: string;
 }
 

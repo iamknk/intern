@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useDocumentStore } from "@/lib/store/document-store";
 import { X, Plus, Check, Search } from "lucide-react";
@@ -20,7 +20,9 @@ export default function ManageDatasetModal({
 }: ManageDatasetModalProps) {
   const datasets = useDocumentStore((s) => s.datasets);
   const documents = useDocumentStore((s) => s.documents);
-  const addDocumentToDataset = useDocumentStore((s) => s.addDocumentToDataset);
+  const appendDocumentsToDataset = useDocumentStore(
+    (s) => s.appendDocumentsToDataset
+  );
   const removeDocumentFromDataset = useDocumentStore(
     (s) => s.removeDocumentFromDataset
   );
@@ -36,7 +38,7 @@ export default function ManageDatasetModal({
     if (isSelected) {
       removeDocumentFromDataset(datasetId, documentId);
     } else {
-      addDocumentToDataset(datasetId, documentId);
+      appendDocumentsToDataset(datasetId, [documentId]);
     }
   };
 

@@ -33,6 +33,7 @@ import { useState } from "react";
 interface ExtractedDataRow extends ExtractedData {
   documentId: string;
   filename: string;
+  isReviewed: boolean;
 }
 
 export function DatasetDataTable() {
@@ -54,6 +55,7 @@ export function DatasetDataTable() {
       ...doc.extractedData!,
       documentId: doc.id,
       filename: doc.filename,
+      isReviewed: doc.status === "reviewed",
     }));
   }, [allDocuments, activeDatasetId]);
 
@@ -79,6 +81,7 @@ export function DatasetDataTable() {
       "Rent Increase Type",
       "Active",
       "Landlord",
+      "Reviewed",
     ];
 
     const csvContent = [
@@ -101,6 +104,7 @@ export function DatasetDataTable() {
           `"${row.rent_increase_type || ""}"`,
           row.is_active !== undefined ? (row.is_active ? "Yes" : "No") : "",
           `"${row.landlord_entity || ""}"`,
+          row.isReviewed ? "Yes" : "No",
         ].join(",")
       ),
     ].join("\n");
@@ -135,6 +139,7 @@ export function DatasetDataTable() {
       "Rent Increase Type": row.rent_increase_type || "",
       Active: row.is_active !== undefined ? (row.is_active ? "Yes" : "No") : "",
       Landlord: row.landlord_entity || "",
+      Reviewed: row.isReviewed ? "Yes" : "No",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);

@@ -15,6 +15,7 @@ import type { ExtractedData } from "@/lib/types";
 interface ExtractedDataRow extends ExtractedData {
   documentId: string;
   filename: string;
+  isReviewed: boolean;
 }
 
 interface DetailedReviewModalProps {
@@ -24,30 +25,33 @@ interface DetailedReviewModalProps {
   datasetName?: string;
 }
 
-const fieldLabels: { key: keyof ExtractedData | "filename"; label: string }[] =
-  [
-    { key: "filename", label: "Document" },
-    { key: "name", label: "Name" },
-    { key: "surname", label: "Surname" },
-    { key: "address_street", label: "Street" },
-    { key: "address_house_number", label: "House Number" },
-    { key: "address_zip_code", label: "Zip Code" },
-    { key: "address_city", label: "City" },
-    { key: "warm_rent", label: "Warm Rent" },
-    { key: "cold_rent", label: "Cold Rent" },
-    { key: "deposit", label: "Deposit" },
-    { key: "contract_term_months", label: "Contract Term (months)" },
-    { key: "notice_period_months", label: "Notice Period (months)" },
-    { key: "rent_increase_type", label: "Rent Increase Type" },
-    { key: "date", label: "Date" },
-    { key: "is_active", label: "Active" },
-    { key: "landlord_entity", label: "Landlord" },
-  ];
+const fieldLabels: {
+  key: keyof ExtractedData | "filename" | "isReviewed";
+  label: string;
+}[] = [
+  { key: "filename", label: "Document" },
+  { key: "name", label: "Name" },
+  { key: "surname", label: "Surname" },
+  { key: "address_street", label: "Street" },
+  { key: "address_house_number", label: "House Number" },
+  { key: "address_zip_code", label: "Zip Code" },
+  { key: "address_city", label: "City" },
+  { key: "warm_rent", label: "Warm Rent" },
+  { key: "cold_rent", label: "Cold Rent" },
+  { key: "deposit", label: "Deposit" },
+  { key: "contract_term_months", label: "Contract Term (months)" },
+  { key: "notice_period_months", label: "Notice Period (months)" },
+  { key: "rent_increase_type", label: "Rent Increase Type" },
+  { key: "date", label: "Date" },
+  { key: "is_active", label: "Active" },
+  { key: "landlord_entity", label: "Landlord" },
+  { key: "isReviewed", label: "Reviewed" },
+];
 
 function formatValue(key: string, value: unknown): string {
   if (value === undefined || value === null || value === "") return "—";
 
-  if (key === "is_active") {
+  if (key === "is_active" || key === "isReviewed") {
     return value ? "Yes" : "No";
   }
 
@@ -118,21 +122,26 @@ export default function DetailedReviewModal({
                 {dataRows.length > 0 ? (
                   dataRows.map((row) => (
                     <TableRow key={row.documentId}>
-                      {fieldLabels.map((field) => (
-                        <TableCell
-                          key={field.key}
-                          className="whitespace-nowrap"
-                        >
-                          <span className="text-sm">
-                            {formatValue(
-                              field.key,
-                              field.key === "filename"
-                                ? row.filename
-                                : row[field.key as keyof ExtractedData]
-                            )}
-                          </span>
-                        </TableCell>
-                      ))}
+                      {fieldLabels.map((field) => {
+                        let value: unknown;
+                        if (field.key === "filename") {
+                          value = row.filename;
+                        } else if (field.key === "isReviewed") {
+                          value = row.isReviewed;
+                        } else {
+                          value = row[field.key as keyof ExtractedData];
+                        }
+                        return (
+                          <TableCell
+                            key={field.key}
+                            className="whitespace-nowrap"
+                          >
+                            <span className="text-sm">
+                              {formatValue(field.key, value)}
+                            </span>
+                          </TableCell>
+                        );
+                      })}
                     </TableRow>
                   ))
                 ) : (
